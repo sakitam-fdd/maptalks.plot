@@ -157,6 +157,44 @@ class PlotDraw extends maptalks.DrawTool {
   }
 
   /**
+   * mouseup for path
+   * @param param
+   * @private
+   */
+  _mouseUpForPath (param) {
+    if (!this._geometry) {
+      return
+    }
+    const containerPoint = this._getMouseContainerPoint(param)
+    if (!this._isValidContainerPoint(containerPoint)) {
+      return
+    }
+    const registerMode = this._getRegisterMode()
+    const coordinate = param['coordinate']
+    const path = this._clickCoords
+    path.push(coordinate)
+    if (path.length < 2) {
+      return
+    }
+    // 去除重复的端点
+    const nIndexes = []
+    for (let i = 1, len = path.length; i < len; i++) {
+      if (path[i].x === path[i - 1].x && path[i].y === path[i - 1].y) {
+        nIndexes.push(i)
+      }
+    }
+    for (let i = nIndexes.length - 1; i >= 0; i--) {
+      path.splice(nIndexes[i], 1)
+    }
+
+    if (path.length < 2 || (this._geometry && (this._geometry instanceof Polygon) && path.length < 3)) {
+      return
+    }
+    registerMode['update'](path, this._geometry, param)
+    this.endDraw(param)
+  }
+
+  /**
    * when nousedown start draw geometry
    * @param param
    * @returns {boolean}
@@ -256,7 +294,9 @@ class PlotDraw extends maptalks.DrawTool {
       }
     } else if (action === 'mouseup') {
       return {
-        'mousedown': this._mousedownToDraw
+        'mousedown': this._mousedownToDraw,
+        'mousemove': this._mousemoveForPath,
+        'mouseup': this._mouseUpForPath
       }
     }
     return null

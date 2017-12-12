@@ -33,6 +33,9 @@
   drawTool.on('drawend', function (param) {
     console.log(param.geometry);
     layer.addGeometry(param.geometry);
+    setTimeout(function () {
+      param.geometry.startEdit()
+    }, 500)
   });
   var items = ['Polyline', 'Curve', 'FreeLine'].map(function (value) {
     return {

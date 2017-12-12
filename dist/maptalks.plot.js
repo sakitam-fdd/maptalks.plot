@@ -434,7 +434,7 @@ RegisterModes[POLYLINE] = {
   }
 };
 RegisterModes[FREE_LINE] = {
-  'action': 'click',
+  'action': 'mouseup',
   'create': function create(path) {
     return new FreeLine(path);
   },
@@ -592,6 +592,39 @@ var PlotDraw = function (_maptalks$DrawTool) {
     this.endDraw(param);
   };
 
+  PlotDraw.prototype._mouseUpForPath = function _mouseUpForPath(param) {
+    if (!this._geometry) {
+      return;
+    }
+    var containerPoint = this._getMouseContainerPoint(param);
+    if (!this._isValidContainerPoint(containerPoint)) {
+      return;
+    }
+    var registerMode = this._getRegisterMode();
+    var coordinate = param['coordinate'];
+    var path = this._clickCoords;
+    path.push(coordinate);
+    if (path.length < 2) {
+      return;
+    }
+
+    var nIndexes = [];
+    for (var i = 1, len = path.length; i < len; i++) {
+      if (path[i].x === path[i - 1].x && path[i].y === path[i - 1].y) {
+        nIndexes.push(i);
+      }
+    }
+    for (var _i2 = nIndexes.length - 1; _i2 >= 0; _i2--) {
+      path.splice(nIndexes[_i2], 1);
+    }
+
+    if (path.length < 2 || this._geometry && this._geometry instanceof Polygon$1 && path.length < 3) {
+      return;
+    }
+    registerMode['update'](path, this._geometry, param);
+    this.endDraw(param);
+  };
+
   PlotDraw.prototype._mousedownToDraw = function _mousedownToDraw(param) {
     var map = this._map;
     var registerMode = this._getRegisterMode();
@@ -670,6 +703,12 @@ var PlotDraw = function (_maptalks$DrawTool) {
       return {
         'mousedown': this._mousedownToDraw
       };
+    } else if (action === 'mouseup') {
+      return {
+        'mousedown': this._mousedownToDraw,
+        'mousemove': this._mousemoveForPath,
+        'mouseup': this._mouseUpForPath
+      };
     }
     return null;
   };
@@ -684,16 +723,16 @@ var PlotDraw = function (_maptalks$DrawTool) {
 
   PlotDraw.registeredModes = function registeredModes(modes) {
     if (modes) {
-      for (var _iterator = Reflect.ownKeys(modes), _isArray = Array.isArray(_iterator), _i2 = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+      for (var _iterator = Reflect.ownKeys(modes), _isArray = Array.isArray(_iterator), _i3 = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
         var _ref;
 
         if (_isArray) {
-          if (_i2 >= _iterator.length) break;
-          _ref = _iterator[_i2++];
+          if (_i3 >= _iterator.length) break;
+          _ref = _iterator[_i3++];
         } else {
-          _i2 = _iterator.next();
-          if (_i2.done) break;
-          _ref = _i2.value;
+          _i3 = _iterator.next();
+          if (_i3.done) break;
+          _ref = _i3.value;
         }
 
         var key = _ref;
