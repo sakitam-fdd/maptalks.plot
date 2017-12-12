@@ -34,7 +34,7 @@
     console.log(param.geometry);
     layer.addGeometry(param.geometry);
   });
-  var items = ['Polyline', 'Curve'].map(function (value) {
+  var items = ['Polyline', 'Curve', 'FreeLine'].map(function (value) {
     return {
       item: value,
       click: function () {

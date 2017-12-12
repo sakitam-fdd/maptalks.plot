@@ -5,6 +5,8 @@
  */
 'use strict';
 
+Object.defineProperty(exports, '__esModule', { value: true });
+
 var maptalks = require('maptalks');
 
 var TextArea = 'TextArea';
@@ -66,35 +68,15 @@ var PlotTypes = Object.freeze({
 	CURVEFLAG: CURVEFLAG
 });
 
-var BASE_LAYERNAME = 'ol-plot-vector-layer';
-
-var MathDistance = function MathDistance(pnt1, pnt2) {
-  return Math.sqrt(Math.pow(pnt1[0] - pnt2[0], 2) + Math.pow(pnt1[1] - pnt2[1], 2));
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
 };
 
-var EventType = {
-  CHANGE: 'change',
-  CLICK: 'click',
-  DBLCLICK: 'dblclick',
-  DRAGENTER: 'dragenter',
-  DRAGOVER: 'dragover',
-  DROP: 'drop',
-  ERROR: 'error',
-  KEYDOWN: 'keydown',
-  KEYPRESS: 'keypress',
-  LOAD: 'load',
-  MOUSEDOWN: 'mousedown',
-  MOUSEMOVE: 'mousemove',
-  MOUSEOUT: 'mouseout',
-  MOUSEUP: 'mouseup',
-  MOUSEWHEEL: 'mousewheel',
-  MSPOINTERDOWN: 'MSPointerDown',
-  RESIZE: 'resize',
-  TOUCHSTART: 'touchstart',
-  TOUCHMOVE: 'touchmove',
-  TOUCHEND: 'touchend',
-  WHEEL: 'wheel'
-};
+
+
+
 
 var asyncGenerator = function () {
   function AwaitValue(value) {
@@ -264,6 +246,9 @@ var possibleConstructorReturn = function (self, call) {
 };
 
 var Canvas2d = maptalks.Canvas;
+var options = {
+  'arcDegree': 90
+};
 
 var Curve = function (_maptalks$LineString) {
   inherits(Curve, _maptalks$LineString);
@@ -306,228 +291,209 @@ var Curve = function (_maptalks$LineString) {
     }
   };
 
+  Curve.prototype._toJSON = function _toJSON(options) {
+    return {
+      'feature': this.toGeoJSON(options),
+      'subType': 'Curve'
+    };
+  };
+
+  Curve.prototype._paintOn = function _paintOn(ctx, points, lineOpacity) {
+    ctx.beginPath();
+    this._arc(ctx, points, lineOpacity);
+    Canvas2d._stroke(ctx, lineOpacity);
+    this._paintArrow(ctx, points, lineOpacity);
+  };
+
+  Curve.fromJSON = function fromJSON(json) {
+    var feature = json['feature'];
+    var arc = new Curve(feature['geometry']['coordinates'], json['options']);
+    arc.setProperties(feature['properties']);
+    return arc;
+  };
+
   return Curve;
 }(maptalks.LineString);
 
-var createPlot = function createPlot(type, points, _params) {
-  var params = _params || {};
-  switch (type) {
-    case CURVE:
-      return new Curve(points, params, '');
-  }
-  return null;
+Curve.registerJSONType('Curve');
+Curve.mergeOptions(options);
+
+var Coordinate$1 = maptalks.Coordinate;
+var options$1 = {
+  'arrowStyle': null,
+  'arrowPlacement': 'vertex-last',
+  'clipToPaint': true
 };
 
-var PlotDraw = function () {
-  function PlotDraw(map) {
-    var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-    classCallCheck(this, PlotDraw);
+var Polyline = function (_maptalks$LineString) {
+  inherits(Polyline, _maptalks$LineString);
 
-    if (map && map instanceof maptalks.Map) {
-      this.map = map;
-    } else {
-      throw new Error('传入的不是地图对象！');
+  function Polyline(coordinates) {
+    var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+    classCallCheck(this, Polyline);
+
+    var _this = possibleConstructorReturn(this, _maptalks$LineString.call(this, options));
+
+    _this.type = 'Polyline';
+    if (coordinates) {
+      _this.setCoordinates(coordinates);
     }
-    this.options = params || {};
-
-    this.points = null;
-
-    this.plot = null;
-
-    this.feature = null;
-
-    this.plotType = null;
-
-    this.plotParams = null;
-
-    this.mapViewport = this.map.getViewport();
-
-    this.dblClickZoomInteraction = null;
-
-    this.drawOverlay = null;
-
-    this.textInter = null;
-
-    this.layerName = this.options && this.options['layerName'] ? this.options['layerName'] : BASE_LAYERNAME;
-
-    this.drawLayer = this.createVectorLayer(this.layerName, {
-      create: true
-    });
-
-    this.textAreas = [];
-    this.addWindowEventListener();
+    return _this;
   }
 
-  PlotDraw.prototype.active = function active(type) {
-    var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-    this.disActive();
-    this.deactiveMapTools();
-    this.plotType = type;
-    this.plotParams = params;
-    this.map.on('click', this.mapFirstClickHandler, this);
+  Polyline.prototype._exportGeoJSONGeometry = function _exportGeoJSONGeometry() {
+    var points = this.getCoordinates();
+    var coordinates = Coordinate$1.toNumberArrays(points);
+    return {
+      'type': 'LineString',
+      'coordinates': coordinates
+    };
   };
 
-  PlotDraw.prototype.addWindowEventListener = function addWindowEventListener() {
-    var _this = this;
+  Polyline.prototype._toJSON = function _toJSON(options) {
+    return {
+      'feature': this.toGeoJSON(options)
+    };
+  };
 
-    document.querySelector('.ol-overlaycontainer').addEventListener('click', function (event) {
-      var ev = event || window.event;
-      var target = ev.target || ev.srcElement;
-      if (target.nodeName.toLowerCase() === 'div') {
-        if (_this.textAreas && _this.textAreas.length > 0) {
-          _this.textAreas.every(function (item) {
-            if (item['uuid'] === target.id) {
-              _this.dispatch('active_textArea', item);
-            }
-          });
+  return Polyline;
+}(maptalks.LineString);
+
+Polyline.mergeOptions(options$1);
+
+Polyline.registerJSONType('Polyline');
+
+var RegisterModes = {};
+RegisterModes[CURVE] = {
+  'action': 'clickDblclick',
+  'create': function create(path) {
+    return new Curve(path);
+  },
+  'update': function update(path, geometry) {
+    geometry.setCoordinates(path);
+  },
+  'generate': function generate(geometry) {
+    return geometry;
+  }
+};
+RegisterModes[POLYLINE] = {
+  'action': 'clickDblclick',
+  'create': function create(path) {
+    return new Polyline(path);
+  },
+  'update': function update(path, geometry) {
+    geometry.setCoordinates(path);
+  },
+  'generate': function generate(geometry) {
+    return geometry;
+  }
+};
+
+var isObject = function isObject(value) {
+  var type = typeof value === 'undefined' ? 'undefined' : _typeof(value);
+  return value !== null && (type === 'object' || type === 'function');
+};
+
+var merge = function merge(a, b) {
+  for (var key in b) {
+    if (isObject(b[key]) && isObject(a[key])) {
+      merge(a[key], b[key]);
+    } else {
+      a[key] = b[key];
+    }
+  }
+  return a;
+};
+
+var _options = {
+  'symbol': {
+    'lineColor': '#000',
+    'lineWidth': 2,
+    'lineOpacity': 1,
+    'polygonFill': '#fff',
+    'polygonOpacity': 0.3
+  },
+  'doubleClickZoom': false,
+  'mode': null,
+  'once': false,
+  'ignoreMouseleave': true
+};
+var registeredMode = {};
+
+var PlotDraw = function (_maptalks$DrawTool) {
+  inherits(PlotDraw, _maptalks$DrawTool);
+
+  function PlotDraw() {
+    var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    classCallCheck(this, PlotDraw);
+
+    var $options = merge(_options, options);
+
+    var _this = possibleConstructorReturn(this, _maptalks$DrawTool.call(this, $options));
+
+    _this.options = $options;
+    _this._checkMode();
+    return _this;
+  }
+
+  PlotDraw.prototype._getRegisterMode = function _getRegisterMode() {
+    var mode = this.getMode();
+    var registerMode = PlotDraw.getRegisterMode(mode);
+    if (!registerMode) {
+      throw new Error(mode + ' is not a valid mode of DrawTool.');
+    }
+    return registerMode;
+  };
+
+  PlotDraw.prototype.setSymbol = function setSymbol(symbol) {
+    if (!symbol) {
+      return this;
+    }
+    this.options['symbol'] = symbol;
+    if (this._geometry) {
+      this._geometry.setSymbol(symbol);
+    }
+    return this;
+  };
+
+  PlotDraw.registerMode = function registerMode(name, modeAction) {
+    registeredMode[name.toLowerCase()] = modeAction;
+  };
+
+  PlotDraw.getRegisterMode = function getRegisterMode(name) {
+    return registeredMode[name.toLowerCase()];
+  };
+
+  PlotDraw.registeredModes = function registeredModes(modes) {
+    if (modes) {
+      for (var _iterator = Reflect.ownKeys(modes), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+        var _ref;
+
+        if (_isArray) {
+          if (_i >= _iterator.length) break;
+          _ref = _iterator[_i++];
+        } else {
+          _i = _iterator.next();
+          if (_i.done) break;
+          _ref = _i.value;
+        }
+
+        var key = _ref;
+
+        if (!key.match(/^(?:constructor|prototype|arguments|caller|name|bind|call|apply|toString|length)$/)) {
+          var desc = Object.getOwnPropertyDescriptor(modes, key);
+          var _key = key.toLowerCase();
+          Object.defineProperty(registeredMode, _key, desc);
+          console.log(registeredMode);
         }
       }
-    });
-  };
-
-  PlotDraw.prototype.disActive = function disActive() {
-    this.removeEventHandlers();
-    this.map.removeOverlay(this.drawOverlay);
-    if (this.textInter) {
-      this.textInter.disActiveInteraction();
-    }
-    this.points = [];
-    this.plot = null;
-    this.feature = null;
-    this.plotType = null;
-    this.plotParams = null;
-    this.activateMapTools();
-  };
-
-  PlotDraw.prototype.isDrawing = function isDrawing() {
-    return !!this.plotType;
-  };
-
-  PlotDraw.prototype.mapFirstClickHandler = function mapFirstClickHandler(event) {
-    this.map.un('click', this.mapFirstClickHandler, this);
-    this.points.push(event.coordinate);
-    this.plot = createPlot(this.plotType, this.points, this.plotParams);
-    this.plot.setMap(this.map);
-    this.feature = new maptalks.Feature(this.plot);
-    this.feature.set('isPlot', true);
-    this.drawLayer.getSource().addFeature(this.feature);
-    if (this.plotType === POINT || this.plotType === PENNANT) {
-      this.plot.finishDrawing();
-      this.drawEnd(event);
-    } else {
-      this.map.on('click', this.mapNextClickHandler, this);
-      if (!this.plot.freehand) {
-        this.map.on('dblclick', this.mapDoubleClickHandler, this);
-      }
-      maptalks.DomUtil.listensDomEvent(this.mapViewport, EventType.MOUSEMOVE, this.mapMouseMoveHandler, this, false);
-    }
-    if (this.plotType && this.feature) {
-      this.plotParams['plotType'] = this.plotType;
-      this.feature.setProperties(this.plotParams);
-    }
-  };
-
-  PlotDraw.prototype.mapNextClickHandler = function mapNextClickHandler(event) {
-    if (!this.plot.freehand) {
-      if (MathDistance(event.coordinate, this.points[this.points.length - 1]) < 0.0001) {
-        return false;
-      }
-    }
-    this.points.push(event.coordinate);
-    this.plot.setPoints(this.points);
-    if (this.plot.fixPointCount === this.plot.getPointCount()) {
-      this.mapDoubleClickHandler(event);
-    }
-    if (this.plot && this.plot.freehand) {
-      this.mapDoubleClickHandler(event);
-    }
-  };
-
-  PlotDraw.prototype.mapDoubleClickHandler = function mapDoubleClickHandler(event) {
-    event.preventDefault();
-    this.plot.finishDrawing();
-    this.drawEnd(event);
-  };
-
-  PlotDraw.prototype.mapMouseMoveHandler = function mapMouseMoveHandler(event) {
-    var coordinate = this.map.getCoordinateFromPixel([event.offsetX, event.offsetY]);
-    if (MathDistance(coordinate, this.points[this.points.length - 1]) < 0.0001) {
-      return false;
-    }
-    if (!this.plot.freehand) {
-      var pnts = this.points.concat([coordinate]);
-      this.plot.setPoints(pnts);
-    } else {
-      this.points.push(coordinate);
-      this.plot.setPoints(this.points);
-    }
-  };
-
-  PlotDraw.prototype.removeEventHandlers = function removeEventHandlers() {
-    this.map.un('click', this.mapFirstClickHandler, this);
-    this.map.un('click', this.mapNextClickHandler, this);
-    maptalks.DomUtil.removeDomEvent(this.mapViewport, EventType.MOUSEMOVE, this.mapMouseMoveHandler, this);
-    this.map.un('dblclick', this.mapDoubleClickHandler, this);
-  };
-
-  PlotDraw.prototype.drawEnd = function drawEnd(event) {
-    this.dispatchSync('drawEnd', {
-      type: 'drawEnd',
-      originalEvent: event,
-      feature: this.feature
-    });
-    if (this.feature && this.options['isClear']) {
-      this.drawLayer.getSource().removeFeature(this.feature);
-    }
-    this.activateMapTools();
-    this.removeEventHandlers();
-    this.map.removeOverlay(this.drawOverlay);
-    this.points = [];
-    this.plot = null;
-    this.plotType = null;
-    this.plotParams = null;
-    this.feature = null;
-  };
-
-  PlotDraw.prototype.addFeature = function addFeature() {
-    this.feature = new maptalks.Feature(this.plot);
-    if (this.feature && this.drawLayer) {
-      this.drawLayer.getSource().addFeature(this.feature);
-    }
-  };
-
-  PlotDraw.prototype.deactiveMapTools = function deactiveMapTools() {
-    var _this2 = this;
-
-    var interactions = this.map.getInteractions().getArray();
-    interactions.every(function (item) {
-      if (item instanceof maptalks.interaction.DoubleClickZoom) {
-        _this2.dblClickZoomInteraction = item;
-        _this2.map.removeInteraction(item);
-        return false;
-      } else {
-        return true;
-      }
-    });
-  };
-
-  PlotDraw.prototype.activateMapTools = function activateMapTools() {
-    if (this.dblClickZoomInteraction && this.dblClickZoomInteraction instanceof maptalks.interaction.DoubleClickZoom) {
-      this.map.addInteraction(this.dblClickZoomInteraction);
-      this.dblClickZoomInteraction = null;
     }
   };
 
   return PlotDraw;
-}();
+}(maptalks.DrawTool);
 
-var MaptalksPlot = function MaptalksPlot(map) {
-  classCallCheck(this, MaptalksPlot);
+PlotDraw.registeredModes(RegisterModes);
 
-  this.plotDraw = new PlotDraw(map);
-};
-
-MaptalksPlot.PlotTypes = PlotTypes;
-
-module.exports = MaptalksPlot;
+exports.PlotDraw = PlotDraw;
+exports.PlotTypes = PlotTypes;

@@ -5,6 +5,7 @@
 
 import Curve from './Polyline/Curve'
 import Polyline from './Polyline/Polyline'
+import FreeLine from './Polyline/FreeLine'
 import * as PlotTypes from '../core/PlotTypes'
 const RegisterModes = {}
 RegisterModes[PlotTypes.CURVE] = {
@@ -31,4 +32,17 @@ RegisterModes[PlotTypes.POLYLINE] = {
     return geometry
   }
 }
+RegisterModes[PlotTypes.FREE_LINE] = {
+  'action': 'mouseup',
+  'create': function (path) {
+    return new FreeLine(path)
+  },
+  'update': function (path, geometry) {
+    geometry.setCoordinates(path)
+  },
+  'generate': function (geometry) {
+    return geometry
+  }
+}
+
 export default RegisterModes
