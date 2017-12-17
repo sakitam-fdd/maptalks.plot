@@ -68,6 +68,8 @@ var PlotTypes = Object.freeze({
 	CURVEFLAG: CURVEFLAG
 });
 
+var BASE_LAYERNAME = 'maptalks-plot-vector-layer';
+
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
   return typeof obj;
 } : function (obj) {
@@ -410,7 +412,7 @@ FreeLine.registerJSONType('FreeLine');
 
 var RegisterModes = {};
 RegisterModes[CURVE] = {
-  'action': 'clickDblclick',
+  'action': ['click', 'click', 'dbclick'],
   'create': function create(path) {
     return new Curve(path);
   },
@@ -422,7 +424,7 @@ RegisterModes[CURVE] = {
   }
 };
 RegisterModes[POLYLINE] = {
-  'action': 'clickDblclick',
+  'action': ['click', 'mousemove', 'dbclick'],
   'create': function create(path) {
     return new Polyline(path);
   },
@@ -434,7 +436,7 @@ RegisterModes[POLYLINE] = {
   }
 };
 RegisterModes[FREE_LINE] = {
-  'action': 'mouseup',
+  'action': ['mousedown', 'drag', 'mouseup'],
   'create': function create(path) {
     return new FreeLine(path);
   },
@@ -462,7 +464,6 @@ var merge = function merge(a, b) {
   return a;
 };
 
-var Polygon$1 = maptalks.Polygon;
 var _options = {
   'symbol': {
     'lineColor': '#000',
@@ -477,9 +478,17 @@ var _options = {
   'ignoreMouseleave': true
 };
 var registeredMode = {};
+var stopPropagation = function stopPropagation(e) {
+  if (e.stopPropagation) {
+    e.stopPropagation();
+  } else {
+    e.cancelBubble = true;
+  }
+  return this;
+};
 
-var PlotDraw = function (_maptalks$DrawTool) {
-  inherits(PlotDraw, _maptalks$DrawTool);
+var PlotDraw = function (_maptalks$MapTool) {
+  inherits(PlotDraw, _maptalks$MapTool);
 
   function PlotDraw() {
     var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -487,10 +496,14 @@ var PlotDraw = function (_maptalks$DrawTool) {
 
     var $options = merge(_options, options);
 
-    var _this = possibleConstructorReturn(this, _maptalks$DrawTool.call(this, $options));
+    var _this = possibleConstructorReturn(this, _maptalks$MapTool.call(this, $options));
 
     _this.options = $options;
-    _this._checkMode();
+    if (_this.options['mode']) _this._getRegisterMode();
+
+    _this.layerName = _this.options && _this.options['layerName'] ? _this.options['layerName'] : BASE_LAYERNAME;
+
+    _this.drawLayer = null;
     return _this;
   }
 
@@ -498,9 +511,147 @@ var PlotDraw = function (_maptalks$DrawTool) {
     var mode = this.getMode();
     var registerMode = PlotDraw.getRegisterMode(mode);
     if (!registerMode) {
-      throw new Error(mode + ' is not a valid mode of DrawTool.');
+      throw new Error(mode + ' is not a valid type of PlotDraw.');
     }
     return registerMode;
+  };
+
+  PlotDraw.prototype.setMode = function setMode(mode) {
+    this._clearStage();
+    this._switchEvents('off');
+    this.options['mode'] = mode;
+    this._getRegisterMode();
+    if (this.isEnabled()) {
+      this._switchEvents('on');
+      this._deactiveMapInteractions();
+    }
+    return this;
+  };
+
+  PlotDraw.prototype.getMode = function getMode() {
+    if (this.options['mode']) {
+      return this.options['mode'].toLowerCase();
+    }
+    return null;
+  };
+
+  PlotDraw.prototype._deactiveMapInteractions = function _deactiveMapInteractions() {
+    var map = this.getMap();
+    this._mapDoubleClickZoom = map.options['doubleClickZoom'];
+    map.config({
+      'doubleClickZoom': this.options['doubleClickZoom']
+    });
+    var action = this._getRegisterMode()['action'];
+    if (action.indexOf('drag') > -1) {
+      var _map = this.getMap();
+      this._mapDraggable = _map.options['draggable'];
+      _map.config({
+        'draggable': false
+      });
+    }
+  };
+
+  PlotDraw.prototype._activateMapInteractions = function _activateMapInteractions() {
+    var map = this.getMap();
+    map.config({
+      'doubleClickZoom': this._mapDoubleClickZoom
+    });
+    if (this._mapDraggable) {
+      map.config('draggable', this._mapDraggable);
+    }
+    delete this._mapDraggable;
+    delete this._mapDoubleClickZoom;
+  };
+
+  PlotDraw.prototype.getEvents = function getEvents() {
+    var action = this._getRegisterMode()['action'];
+    if (Array.isArray(action)) {
+      return {
+        'click': this._firstClickHandler,
+        'mousemove': this._mouseMoveHandler,
+        'dblclick': this._doubleClickHandler
+      };
+    }
+    return null;
+  };
+
+  PlotDraw.prototype._firstClickHandler = function _firstClickHandler(event) {
+    var registerMode = this._getRegisterMode();
+    var coordinate = event['coordinate'];
+    var symbol = this.getSymbol();
+    if (!this._geometry) {
+      this._clickCoords = [coordinate];
+      this._geometry = registerMode['create'](this._clickCoords, event);
+      if (symbol) {
+        this._geometry.setSymbol(symbol);
+      }
+      this._addGeometryToStage(this._geometry);
+      this._fireEvent('drawstart', event);
+    } else {
+      if (!(this._historyPointer === null)) {
+        this._clickCoords = this._clickCoords.slice(0, this._historyPointer);
+      }
+      this._clickCoords.push(coordinate);
+      this._historyPointer = this._clickCoords.length;
+      registerMode['update'](this._clickCoords, this._geometry, event);
+      this._fireEvent('drawvertex', event);
+    }
+  };
+
+  PlotDraw.prototype._mouseMoveHandler = function _mouseMoveHandler(event) {
+    var map = this.getMap();
+    if (!this._geometry || !map || map.isInteracting()) {
+      return;
+    }
+    var containerPoint = this._getMouseContainerPoint(event);
+    if (!this._isValidContainerPoint(containerPoint)) {
+      return;
+    }
+    var coordinate = event['coordinate'];
+    var registerMode = this._getRegisterMode();
+    var path = this._clickCoords.slice(0, this._historyPointer);
+    if (path && path.length > 0 && coordinate.equals(path[path.length - 1])) {
+      return;
+    }
+    registerMode['update'](path.concat([coordinate]), this._geometry, event);
+    this._fireEvent('mousemove', event);
+  };
+
+  PlotDraw.prototype._doubleClickHandler = function _doubleClickHandler(event) {
+    this.endDraw(event);
+  };
+
+  PlotDraw.prototype._getMouseContainerPoint = function _getMouseContainerPoint(event) {
+    var action = this._getRegisterMode()['action'];
+    if (action.indexOf('drag') > -1) {
+      stopPropagation(event['domEvent']);
+    }
+    return event['containerPoint'];
+  };
+
+  PlotDraw.prototype._isValidContainerPoint = function _isValidContainerPoint(containerPoint) {
+    var mapSize = this._map.getSize();
+    var w = mapSize['width'];
+    var h = mapSize['height'];
+    if (containerPoint.x < 0 || containerPoint.y < 0) {
+      return false;
+    } else if (containerPoint.x > w || containerPoint.y > h) {
+      return false;
+    }
+    return true;
+  };
+
+  PlotDraw.prototype._clearStage = function _clearStage() {
+    this._getDrawLayer(this.layerName).clear();
+    if (this._geometry) {
+      this._geometry.remove();
+      delete this._geometry;
+    }
+    delete this._clickCoords;
+  };
+
+  PlotDraw.prototype._addGeometryToStage = function _addGeometryToStage(geometry) {
+    this._getDrawLayer(this.layerName).addGeometry(geometry);
   };
 
   PlotDraw.prototype.setSymbol = function setSymbol(symbol) {
@@ -514,203 +665,82 @@ var PlotDraw = function (_maptalks$DrawTool) {
     return this;
   };
 
-  PlotDraw.prototype._clickForPath = function _clickForPath(param) {
-    var registerMode = this._getRegisterMode();
-    var coordinate = param['coordinate'];
-    var symbol = this.getSymbol();
-    if (!this._geometry) {
-      this._clickCoords = [coordinate];
-      this._geometry = registerMode['create'](this._clickCoords, param);
-      if (symbol) {
-        this._geometry.setSymbol(symbol);
-      }
-      this._addGeometryToStage(this._geometry);
-
-      this._fireEvent('drawstart', param);
+  PlotDraw.prototype.getSymbol = function getSymbol() {
+    var symbol = this.options['symbol'];
+    if (symbol) {
+      return maptalks.Util.extendSymbol(symbol);
     } else {
-      if (!(this._historyPointer === null)) {
-        this._clickCoords = this._clickCoords.slice(0, this._historyPointer);
-      }
-      this._clickCoords.push(coordinate);
-      this._historyPointer = this._clickCoords.length;
-      registerMode['update'](this._clickCoords, this._geometry, param);
-
-      this._fireEvent('drawvertex', param);
+      return maptalks.Util.extendSymbol(this.options['symbol']);
     }
   };
 
-  PlotDraw.prototype._mousemoveForPath = function _mousemoveForPath(param) {
+  PlotDraw.prototype._getDrawLayer = function _getDrawLayer(layerName) {
+    var drawToolLayer = this._map.getLayer(layerName);
+    if (!drawToolLayer) {
+      drawToolLayer = new maptalks.VectorLayer(layerName, {
+        'enableSimplify': false
+      });
+      this._map.addLayer(drawToolLayer);
+    }
+    return drawToolLayer;
+  };
+
+  PlotDraw.prototype._fireEvent = function _fireEvent(eventName) {
+    var param = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+    if (this._geometry) {
+      param['geometry'] = this._getRegisterMode()['generate'](this._geometry).copy();
+    }
+    maptalks.MapTool.prototype._fireEvent.call(this, eventName, param);
+  };
+
+  PlotDraw.prototype.onAdd = function onAdd() {
+    this._getRegisterMode();
+  };
+
+  PlotDraw.prototype.onEnable = function onEnable() {
+    this._deactiveMapInteractions();
+    this.drawLayer = this._getDrawLayer(this.layerName);
+    this._clearStage();
+    this._loadResources();
+    return this;
+  };
+
+  PlotDraw.prototype.onDisable = function onDisable() {
     var map = this.getMap();
-    if (!this._geometry || !map || map.isInteracting()) {
-      return;
+    this._activateMapInteractions();
+    this.endDraw();
+    if (this._map) {
+      map.removeLayer(this._getDrawLayer(this.layerName));
     }
-    var containerPoint = this._getMouseContainerPoint(param);
-    if (!this._isValidContainerPoint(containerPoint)) {
-      return;
-    }
-    var coordinate = param['coordinate'];
-    var registerMode = this._getRegisterMode();
-    var path = this._clickCoords.slice(0, this._historyPointer);
-    if (path && path.length > 0 && coordinate.equals(path[path.length - 1])) {
-      return;
-    }
-    registerMode['update'](path.concat([coordinate]), this._geometry, param);
-
-    this._fireEvent('mousemove', param);
+    return this;
   };
 
-  PlotDraw.prototype._dblclickForPath = function _dblclickForPath(param) {
-    if (!this._geometry) {
-      return;
-    }
-    var containerPoint = this._getMouseContainerPoint(param);
-    if (!this._isValidContainerPoint(containerPoint)) {
-      return;
-    }
-    var registerMode = this._getRegisterMode();
-    var coordinate = param['coordinate'];
-    var path = this._clickCoords;
-    path.push(coordinate);
-    if (path.length < 2) {
-      return;
-    }
+  PlotDraw.prototype.endDraw = function endDraw() {
+    var param = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-    var nIndexes = [];
-    for (var i = 1, len = path.length; i < len; i++) {
-      if (path[i].x === path[i - 1].x && path[i].y === path[i - 1].y) {
-        nIndexes.push(i);
-      }
+    if (!this._geometry || this._ending) {
+      return this;
     }
-    for (var _i = nIndexes.length - 1; _i >= 0; _i--) {
-      path.splice(nIndexes[_i], 1);
+    this._ending = true;
+    var geometry = this._geometry;
+    this._clearStage();
+    this._geometry = geometry;
+    this._fireEvent('drawend', param);
+    delete this._geometry;
+    if (this.options['once']) {
+      this.disable();
     }
-
-    if (path.length < 2 || this._geometry && this._geometry instanceof Polygon$1 && path.length < 3) {
-      return;
-    }
-    registerMode['update'](path, this._geometry, param);
-    this.endDraw(param);
+    delete this._ending;
+    return this;
   };
 
-  PlotDraw.prototype._mouseUpForPath = function _mouseUpForPath(param) {
-    if (!this._geometry) {
-      return;
+  PlotDraw.prototype._loadResources = function _loadResources() {
+    var symbol = this.getSymbol();
+    var resources = maptalks.Util.getExternalResources(symbol);
+    if (resources.length > 0) {
+      this.drawLayer._getRenderer().loadResources(resources);
     }
-    var containerPoint = this._getMouseContainerPoint(param);
-    if (!this._isValidContainerPoint(containerPoint)) {
-      return;
-    }
-    var registerMode = this._getRegisterMode();
-    var coordinate = param['coordinate'];
-    var path = this._clickCoords;
-    path.push(coordinate);
-    if (path.length < 2) {
-      return;
-    }
-
-    var nIndexes = [];
-    for (var i = 1, len = path.length; i < len; i++) {
-      if (path[i].x === path[i - 1].x && path[i].y === path[i - 1].y) {
-        nIndexes.push(i);
-      }
-    }
-    for (var _i2 = nIndexes.length - 1; _i2 >= 0; _i2--) {
-      path.splice(nIndexes[_i2], 1);
-    }
-
-    if (path.length < 2 || this._geometry && this._geometry instanceof Polygon$1 && path.length < 3) {
-      return;
-    }
-    registerMode['update'](path, this._geometry, param);
-    this.endDraw(param);
-  };
-
-  PlotDraw.prototype._mousedownToDraw = function _mousedownToDraw(param) {
-    var map = this._map;
-    var registerMode = this._getRegisterMode();
-    var me = this;
-    var firstPoint = this._getMouseContainerPoint(param);
-    if (!this._isValidContainerPoint(firstPoint)) {
-      return false;
-    }
-
-    function genGeometry(evt) {
-      var symbol = me.getSymbol();
-      var geometry = me._geometry;
-      if (!geometry) {
-        geometry = registerMode['create'](evt.coordinate, evt);
-        geometry.setSymbol(symbol);
-        me._addGeometryToStage(geometry);
-        me._geometry = geometry;
-      } else {
-        registerMode['update'](evt.coordinate, geometry, evt);
-      }
-    }
-
-    var onMouseMove = function onMouseMove(evt) {
-      if (!this._geometry) {
-        return false;
-      }
-      var current = this._getMouseContainerPoint(evt);
-      if (!this._isValidContainerPoint(current)) {
-        return false;
-      }
-      genGeometry(evt);
-      this._fireEvent('mousemove', param);
-      return false;
-    };
-
-    var onMouseUp = function onMouseUp(evt) {
-      map.off('mousemove', onMouseMove, this);
-      map.off('mouseup', onMouseUp, this);
-      if (!this.options['ignoreMouseleave']) {
-        map.off('mouseleave', onMouseUp, this);
-      }
-      if (!this._geometry) {
-        return false;
-      }
-      var current = this._getMouseContainerPoint(evt);
-      if (this._isValidContainerPoint(current)) {
-        genGeometry(evt);
-      }
-      this.endDraw(param);
-      return false;
-    };
-
-    this._fireEvent('drawstart', param);
-    genGeometry(param);
-    map.on('mousemove', onMouseMove, this);
-    map.on('mouseup', onMouseUp, this);
-    if (!this.options['ignoreMouseleave']) {
-      map.on('mouseleave', onMouseUp, this);
-    }
-    return false;
-  };
-
-  PlotDraw.prototype.getEvents = function getEvents() {
-    var action = this._getRegisterMode()['action'];
-    if (action === 'clickDblclick') {
-      return {
-        'click': this._clickForPath,
-        'mousemove': this._mousemoveForPath,
-        'dblclick': this._dblclickForPath
-      };
-    } else if (action === 'click') {
-      return {
-        'click': this._clickForPoint
-      };
-    } else if (action === 'drag') {
-      return {
-        'mousedown': this._mousedownToDraw
-      };
-    } else if (action === 'mouseup') {
-      return {
-        'mousedown': this._mousedownToDraw,
-        'mousemove': this._mousemoveForPath,
-        'mouseup': this._mouseUpForPath
-      };
-    }
-    return null;
   };
 
   PlotDraw.registerMode = function registerMode(name, modeAction) {
@@ -723,16 +753,16 @@ var PlotDraw = function (_maptalks$DrawTool) {
 
   PlotDraw.registeredModes = function registeredModes(modes) {
     if (modes) {
-      for (var _iterator = Reflect.ownKeys(modes), _isArray = Array.isArray(_iterator), _i3 = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
+      for (var _iterator = Reflect.ownKeys(modes), _isArray = Array.isArray(_iterator), _i = 0, _iterator = _isArray ? _iterator : _iterator[Symbol.iterator]();;) {
         var _ref;
 
         if (_isArray) {
-          if (_i3 >= _iterator.length) break;
-          _ref = _iterator[_i3++];
+          if (_i >= _iterator.length) break;
+          _ref = _iterator[_i++];
         } else {
-          _i3 = _iterator.next();
-          if (_i3.done) break;
-          _ref = _i3.value;
+          _i = _iterator.next();
+          if (_i.done) break;
+          _ref = _i.value;
         }
 
         var key = _ref;
@@ -748,7 +778,7 @@ var PlotDraw = function (_maptalks$DrawTool) {
   };
 
   return PlotDraw;
-}(maptalks.DrawTool);
+}(maptalks.MapTool);
 
 PlotDraw.registeredModes(RegisterModes);
 

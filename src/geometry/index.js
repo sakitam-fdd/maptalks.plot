@@ -9,7 +9,7 @@ import FreeLine from './Polyline/FreeLine'
 import * as PlotTypes from '../core/PlotTypes'
 const RegisterModes = {}
 RegisterModes[PlotTypes.CURVE] = {
-  'action': 'clickDblclick',
+  'action': ['click', 'click', 'dbclick'],
   'create': function (path) {
     return new Curve(path)
   },
@@ -21,7 +21,7 @@ RegisterModes[PlotTypes.CURVE] = {
   }
 }
 RegisterModes[PlotTypes.POLYLINE] = {
-  'action': 'clickDblclick',
+  'action': ['click', 'mousemove', 'dbclick'],
   'create': function (path) {
     return new Polyline(path)
   },
@@ -33,7 +33,7 @@ RegisterModes[PlotTypes.POLYLINE] = {
   }
 }
 RegisterModes[PlotTypes.FREE_LINE] = {
-  'action': 'mouseup',
+  'action': ['mousedown', 'drag', 'mouseup'],
   'create': function (path) {
     return new FreeLine(path)
   },

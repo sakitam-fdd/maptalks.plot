@@ -36,7 +36,10 @@ const genConfig = (opts) => {
       file: opts.file,
       format: opts.format,
       banner,
-      name: _package.namespace
+      name: _package.namespace,
+      globals: {
+        maptalks: 'maptalks'
+      }
     }
   }
   if (opts.env) {
