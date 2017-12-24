@@ -47,6 +47,19 @@ class PlotDraw extends maptalks.MapTool {
      * @type {*}
      */
     this.drawLayer = null
+
+    /**
+     * events
+     * @type {{click: PlotDraw._firstClickHandler, mousemove: PlotDraw._mouseMoveHandler, dblclick: PlotDraw._doubleClickHandler}}
+     */
+    this.events = {
+      'click': this._firstClickHandler,
+      'mousemove': this._mouseMoveHandler,
+      'dblclick': this._doubleClickHandler,
+      'mousedown': this._mouseDownHandler,
+      'mouseup': this._mouseUpHandler,
+      'drag': this._mouseMoveHandler
+    }
   }
 
   /**
@@ -127,22 +140,75 @@ class PlotDraw extends maptalks.MapTool {
   }
 
   /**
-   * get register events
+   * 注册地图事件
    * @returns {*}
    */
   getEvents () {
     const action = this._getRegisterMode()['action']
+    const _events = {}
     if (Array.isArray(action)) {
-      return {
-        'click': this._firstClickHandler,
-        'mousemove': this._mouseMoveHandler,
-        'dblclick': this._doubleClickHandler
+      for (let i = 0; i < action.length; i++) {
+        if (action[i] === 'drag') {
+          _events['mousemove'] = this.events[action[i]]
+        } else {
+          _events[action[i]] = this.events[action[i]]
+        }
       }
+      return _events
     }
     return null
   }
 
+  /**
+   * 鼠标按下事件
+   * @param event
+   * @private
+   */
+  _mouseDownHandler (event) {
+    this._createGeometry(event)
+  }
+
+  /**
+   * 鼠标抬起事件
+   * @param event
+   * @returns {PlotDraw}
+   * @private
+   */
+  _mouseUpHandler (event) {
+    this.endDraw(event)
+  }
+
+  /**
+   * 鼠标第一次点击事件处理
+   * @param event
+   * @private
+   */
   _firstClickHandler (event) {
+    this._createGeometry(event)
+    const registerMode = this._getRegisterMode()
+    const coordinate = event['coordinate']
+    if (this._geometry) {
+      if (!(this._historyPointer === null)) {
+        this._clickCoords = this._clickCoords.slice(0, this._historyPointer)
+      }
+      this._clickCoords.push(coordinate)
+      this._historyPointer = this._clickCoords.length
+      if (registerMode['limitClickCount'] && registerMode['limitClickCount'] === this._historyPointer) {
+        registerMode['update'](this._clickCoords, this._geometry, event)
+        this.endDraw(event)
+      } else {
+        registerMode['update'](this._clickCoords, this._geometry, event)
+      }
+      this._fireEvent('drawvertex', event)
+    }
+  }
+
+  /**
+   * 第一次事件创建相关geometry
+   * @param event
+   * @private
+   */
+  _createGeometry (event) {
     const registerMode = this._getRegisterMode()
     const coordinate = event['coordinate']
     const symbol = this.getSymbol()
@@ -154,19 +220,13 @@ class PlotDraw extends maptalks.MapTool {
       }
       this._addGeometryToStage(this._geometry)
       this._fireEvent('drawstart', event)
-    } else {
-      if (!(this._historyPointer === null)) {
-        this._clickCoords = this._clickCoords.slice(0, this._historyPointer)
-      }
-      this._clickCoords.push(coordinate)
-      this._historyPointer = this._clickCoords.length
-      registerMode['update'](this._clickCoords, this._geometry, event)
-      this._fireEvent('drawvertex', event)
     }
   }
 
   /**
    * 鼠标移动事件处理
+   * FIXME 当为freehand模式时，鼠标按下松开而不移动会造成
+   * 构造的geometry不完整
    * @param event
    * @private
    */
@@ -185,7 +245,16 @@ class PlotDraw extends maptalks.MapTool {
     if (path && path.length > 0 && coordinate.equals(path[path.length - 1])) {
       return
     }
-    registerMode['update'](path.concat([coordinate]), this._geometry, event)
+    if (!registerMode.freehand) {
+      registerMode['update'](path.concat([coordinate]), this._geometry, event)
+    } else {
+      if (!(this._historyPointer === null)) {
+        this._clickCoords = this._clickCoords.slice(0, this._historyPointer)
+      }
+      this._clickCoords.push(coordinate)
+      this._historyPointer = this._clickCoords.length
+      registerMode['update'](this._clickCoords, this._geometry, event)
+    }
     this._fireEvent('mousemove', event)
   }
 
@@ -198,6 +267,12 @@ class PlotDraw extends maptalks.MapTool {
     this.endDraw(event)
   }
 
+  /**
+   * get point
+   * @param event
+   * @returns {*}
+   * @private
+   */
   _getMouseContainerPoint (event) {
     const action = this._getRegisterMode()['action']
     if (action.indexOf('drag') > -1) {
@@ -206,6 +281,12 @@ class PlotDraw extends maptalks.MapTool {
     return event['containerPoint']
   }
 
+  /**
+   * is valid point
+   * @param containerPoint
+   * @returns {boolean}
+   * @private
+   */
   _isValidContainerPoint (containerPoint) {
     const mapSize = this._map.getSize()
     const w = mapSize['width']
@@ -354,6 +435,10 @@ class PlotDraw extends maptalks.MapTool {
     return this
   }
 
+  /**
+   * 加载资源
+   * @private
+   */
   _loadResources () {
     const symbol = this.getSymbol()
     const resources = maptalks.Util.getExternalResources(symbol)
@@ -391,7 +476,6 @@ class PlotDraw extends maptalks.MapTool {
           let desc = Object.getOwnPropertyDescriptor(modes, key)
           let _key = key.toLowerCase()
           Object.defineProperty(registeredMode, _key, desc)
-          console.log(registeredMode)
         }
       }
     }

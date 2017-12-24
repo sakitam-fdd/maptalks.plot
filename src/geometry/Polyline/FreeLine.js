@@ -20,6 +20,12 @@ class FreeLine extends maptalks.LineString {
     }
   }
 
+  setPoints (coordinates) {
+    if (coordinates) {
+      this.setCoordinates(coordinates)
+    }
+  }
+
   _exportGeoJSONGeometry () {
     const points = this.getCoordinates()
     const coordinates = Coordinate.toNumberArrays(points)
