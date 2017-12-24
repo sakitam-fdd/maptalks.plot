@@ -4,40 +4,55 @@
  */
 
 import * as maptalks from 'maptalks'
-const Canvas2d = maptalks.Canvas
+import { getCurvePoints } from '../helper/index'
+const Coordinate = maptalks.Coordinate
 const options = {
-  'arcDegree': 90
+  'arrowStyle': null,
+  'arrowPlacement': 'vertex-last', // vertex-first, vertex-last, vertex-firstlast, point
+  'clipToPaint': true
 }
 class Curve extends maptalks.LineString {
-  _arc (ctx, points, lineOpacity) {
-    const degree = this.options['arcDegree'] * Math.PI / 180
-    for (let i = 1, l = points.length; i < l; i++) {
-      Canvas2d._arcBetween(ctx, points[i - 1], points[i], degree)
-      Canvas2d._stroke(ctx, lineOpacity)
+  constructor (coordinates, options = {}) {
+    super(options)
+    this.type = 'Curve'
+    this._coordinates = []
+    if (coordinates) {
+      this.setPoints(coordinates)
     }
   }
 
-  _quadraticCurve (ctx, points) {
-    if (points.length <= 2) {
-      Canvas2d._path(ctx, points)
-      return
-    }
-    Canvas2d.quadraticCurve(ctx, points)
-  }
-
-  _bezierCurve (ctx, points) {
-    if (points.length <= 3) {
-      Canvas2d._path(ctx, points)
-      return
-    }
-    let i, l
-    for (i = 1, l = points.length; i + 2 < l; i += 3) {
-      ctx.bezierCurveTo(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y, points[i + 2].x, points[i + 2].y)
-    }
-    if (i < l) {
-      for (; i < l; i++) {
-        ctx.lineTo(points[i].x, points[i].y)
+  _generate () {
+    let count = this._coordinates.length
+    if (count < 2) {
+      return false
+    } else if (count === 2) {
+      this.setCoordinates(this._coordinates)
+    } else {
+      let _coordinates = this._coordinates.map(_item => {
+        if (_item && _item.hasOwnProperty('x')) {
+          return [_item['x'], _item['y']]
+        } else if (Array.isArray(_item)) {
+          return _item
+        }
+      })
+      let points = getCurvePoints(0.3, _coordinates)
+      if (Array.isArray(points)) {
+        let _points = points.map(_item => {
+          if (Array.isArray(_item)) {
+            return new Coordinate(_item[0], _item[1])
+          } else {
+            return _item
+          }
+        })
+        this.setCoordinates(_points)
       }
+    }
+  }
+
+  setPoints (coordinates) {
+    this._coordinates = !coordinates ? [] : coordinates
+    if (this._coordinates.length >= 1) {
+      this._generate()
     }
   }
 
@@ -46,14 +61,6 @@ class Curve extends maptalks.LineString {
       'feature': this.toGeoJSON(options),
       'subType': 'Curve'
     }
-  }
-
-  // paint method on canvas
-  _paintOn (ctx, points, lineOpacity) {
-    ctx.beginPath()
-    this._arc(ctx, points, lineOpacity)
-    Canvas2d._stroke(ctx, lineOpacity)
-    this._paintArrow(ctx, points, lineOpacity)
   }
 
   static fromJSON (json) {

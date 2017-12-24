@@ -4,9 +4,9 @@
  */
 
 import * as maptalks from 'maptalks'
+import {BASE_LAYERNAME} from '../Constants'
 import RegisterModes from '../geometry'
 import { merge } from '../utils/utils'
-const Polygon = maptalks.Polygon
 const _options = {
   'symbol': {
     'lineColor': '#000',
@@ -21,21 +21,304 @@ const _options = {
   'ignoreMouseleave': true
 }
 const registeredMode = {}
-class PlotDraw extends maptalks.DrawTool {
+const stopPropagation = function (e) {
+  if (e.stopPropagation) {
+    e.stopPropagation()
+  } else {
+    e.cancelBubble = true
+  }
+  return this
+}
+class PlotDraw extends maptalks.MapTool {
   constructor (options = {}) {
     const $options = merge(_options, options)
     super($options)
     this.options = $options
-    this._checkMode()
+    if (this.options['mode']) this._getRegisterMode()
+
+    /**
+     * 创建图层名称
+     * @type {string}
+     */
+    this.layerName = ((this.options && this.options['layerName']) ? this.options['layerName'] : BASE_LAYERNAME)
+
+    /**
+     * 创建标绘要素图层
+     * @type {*}
+     */
+    this.drawLayer = null
+
+    /**
+     * events
+     * @type {{click: PlotDraw._firstClickHandler, mousemove: PlotDraw._mouseMoveHandler, dblclick: PlotDraw._doubleClickHandler}}
+     */
+    this.events = {
+      'click': this._firstClickHandler,
+      'mousemove': this._mouseMoveHandler,
+      'dblclick': this._doubleClickHandler,
+      'mousedown': this._mouseDownHandler,
+      'mouseup': this._mouseUpHandler,
+      'drag': this._mouseMoveHandler
+    }
   }
 
+  /**
+   * 获取注册过的标绘类型
+   * @returns {Object}
+   * @private
+   */
   _getRegisterMode () {
     const mode = this.getMode()
     const registerMode = PlotDraw.getRegisterMode(mode)
     if (!registerMode) {
-      throw new Error(mode + ' is not a valid mode of DrawTool.')
+      throw new Error(mode + ' is not a valid type of PlotDraw.')
     }
     return registerMode
+  }
+
+  /**
+   * 激活对应工具
+   * @param mode
+   * @returns {PlotDraw}
+   */
+  setMode (mode) {
+    this._clearStage()
+    this._switchEvents('off') // _prototype
+    this.options['mode'] = mode
+    this._getRegisterMode() // cheack type
+    if (this.isEnabled()) {
+      this._switchEvents('on')
+      this._deactiveMapInteractions()
+    }
+    return this
+  }
+
+  /**
+   * 获取当前激活的标绘工具
+   * @return {String} mode
+   */
+  getMode () {
+    if (this.options['mode']) {
+      return this.options['mode'].toLowerCase()
+    }
+    return null
+  }
+
+  /**
+   * 取消激活地图交互并保存
+   */
+  _deactiveMapInteractions () {
+    const map = this.getMap()
+    this._mapDoubleClickZoom = map.options['doubleClickZoom']
+    map.config({
+      'doubleClickZoom': this.options['doubleClickZoom']
+    })
+    const action = this._getRegisterMode()['action']
+    if (action.indexOf('drag') > -1) {
+      const map = this.getMap()
+      this._mapDraggable = map.options['draggable']
+      map.config({
+        'draggable': false
+      })
+    }
+  }
+
+  /**
+   * 激活地图原有交互
+   * @private
+   */
+  _activateMapInteractions () {
+    const map = this.getMap()
+    map.config({
+      'doubleClickZoom': this._mapDoubleClickZoom
+    })
+    if (this._mapDraggable) {
+      map.config('draggable', this._mapDraggable)
+    }
+    delete this._mapDraggable
+    delete this._mapDoubleClickZoom
+  }
+
+  /**
+   * 注册地图事件
+   * @returns {*}
+   */
+  getEvents () {
+    const action = this._getRegisterMode()['action']
+    const _events = {}
+    if (Array.isArray(action)) {
+      for (let i = 0; i < action.length; i++) {
+        if (action[i] === 'drag') {
+          _events['mousemove'] = this.events[action[i]]
+        } else {
+          _events[action[i]] = this.events[action[i]]
+        }
+      }
+      return _events
+    }
+    return null
+  }
+
+  /**
+   * 鼠标按下事件
+   * @param event
+   * @private
+   */
+  _mouseDownHandler (event) {
+    this._createGeometry(event)
+  }
+
+  /**
+   * 鼠标抬起事件
+   * @param event
+   * @returns {PlotDraw}
+   * @private
+   */
+  _mouseUpHandler (event) {
+    this.endDraw(event)
+  }
+
+  /**
+   * 鼠标第一次点击事件处理
+   * @param event
+   * @private
+   */
+  _firstClickHandler (event) {
+    this._createGeometry(event)
+    const registerMode = this._getRegisterMode()
+    const coordinate = event['coordinate']
+    if (this._geometry) {
+      if (!(this._historyPointer === null)) {
+        this._clickCoords = this._clickCoords.slice(0, this._historyPointer)
+      }
+      this._clickCoords.push(coordinate)
+      this._historyPointer = this._clickCoords.length
+      if (registerMode['limitClickCount'] && registerMode['limitClickCount'] === this._historyPointer) {
+        registerMode['update'](this._clickCoords, this._geometry, event)
+        this.endDraw(event)
+      } else {
+        registerMode['update'](this._clickCoords, this._geometry, event)
+      }
+      this._fireEvent('drawvertex', event)
+    }
+  }
+
+  /**
+   * 第一次事件创建相关geometry
+   * @param event
+   * @private
+   */
+  _createGeometry (event) {
+    const registerMode = this._getRegisterMode()
+    const coordinate = event['coordinate']
+    const symbol = this.getSymbol()
+    if (!this._geometry) {
+      this._clickCoords = [coordinate]
+      this._geometry = registerMode['create'](this._clickCoords, event)
+      if (symbol) {
+        this._geometry.setSymbol(symbol)
+      }
+      this._addGeometryToStage(this._geometry)
+      this._fireEvent('drawstart', event)
+    }
+  }
+
+  /**
+   * 鼠标移动事件处理
+   * FIXME 当为freehand模式时，鼠标按下松开而不移动会造成
+   * 构造的geometry不完整
+   * @param event
+   * @private
+   */
+  _mouseMoveHandler (event) {
+    const map = this.getMap()
+    if (!this._geometry || !map || map.isInteracting()) {
+      return
+    }
+    const containerPoint = this._getMouseContainerPoint(event)
+    if (!this._isValidContainerPoint(containerPoint)) {
+      return
+    }
+    const coordinate = event['coordinate']
+    const registerMode = this._getRegisterMode()
+    const path = this._clickCoords.slice(0, this._historyPointer)
+    if (path && path.length > 0 && coordinate.equals(path[path.length - 1])) {
+      return
+    }
+    if (!registerMode.freehand) {
+      registerMode['update'](path.concat([coordinate]), this._geometry, event)
+    } else {
+      if (!(this._historyPointer === null)) {
+        this._clickCoords = this._clickCoords.slice(0, this._historyPointer)
+      }
+      this._clickCoords.push(coordinate)
+      this._historyPointer = this._clickCoords.length
+      registerMode['update'](this._clickCoords, this._geometry, event)
+    }
+    this._fireEvent('mousemove', event)
+  }
+
+  /**
+   * 双击事件处理
+   * @param event
+   * @private
+   */
+  _doubleClickHandler (event) {
+    this.endDraw(event)
+  }
+
+  /**
+   * get point
+   * @param event
+   * @returns {*}
+   * @private
+   */
+  _getMouseContainerPoint (event) {
+    const action = this._getRegisterMode()['action']
+    if (action.indexOf('drag') > -1) {
+      stopPropagation(event['domEvent'])
+    }
+    return event['containerPoint']
+  }
+
+  /**
+   * is valid point
+   * @param containerPoint
+   * @returns {boolean}
+   * @private
+   */
+  _isValidContainerPoint (containerPoint) {
+    const mapSize = this._map.getSize()
+    const w = mapSize['width']
+    const h = mapSize['height']
+    if (containerPoint.x < 0 || containerPoint.y < 0) {
+      return false
+    } else if (containerPoint.x > w || containerPoint.y > h) {
+      return false
+    }
+    return true
+  }
+
+  /**
+   * 清空缓存
+   * @private
+   */
+  _clearStage () {
+    this._getDrawLayer(this.layerName).clear()
+    if (this._geometry) {
+      this._geometry.remove()
+      delete this._geometry
+    }
+    delete this._clickCoords
+  }
+
+  /**
+   * 添加geometry到图层
+   * @param geometry
+   * @private
+   */
+  _addGeometryToStage (geometry) {
+    this._getDrawLayer(this.layerName).addGeometry(geometry)
   }
 
   /**
@@ -55,251 +338,113 @@ class PlotDraw extends maptalks.DrawTool {
   }
 
   /**
-   * click fro path
-   * @param param
-   * @private
+   * Get symbol of the draw tool
+   * @return {Object} symbol
    */
-  _clickForPath (param) {
-    const registerMode = this._getRegisterMode()
-    const coordinate = param['coordinate']
-    const symbol = this.getSymbol()
-    if (!this._geometry) {
-      this._clickCoords = [coordinate]
-      this._geometry = registerMode['create'](this._clickCoords, param)
-      if (symbol) {
-        this._geometry.setSymbol(symbol)
-      }
-      this._addGeometryToStage(this._geometry)
-
-      /**
-       * drawstart event.
-       */
-      this._fireEvent('drawstart', param)
+  getSymbol () {
+    const symbol = this.options['symbol']
+    if (symbol) {
+      return maptalks.Util.extendSymbol(symbol)
     } else {
-      if (!(this._historyPointer === null)) {
-        this._clickCoords = this._clickCoords.slice(0, this._historyPointer)
-      }
-      this._clickCoords.push(coordinate)
-      this._historyPointer = this._clickCoords.length
-      registerMode['update'](this._clickCoords, this._geometry, param)
-
-      /**
-       * drawvertex event.
-       */
-      this._fireEvent('drawvertex', param)
+      return maptalks.Util.extendSymbol(this.options['symbol'])
     }
   }
 
   /**
-   * mouse move fro path
-   * @param param
-   * @private
-   */
-  _mousemoveForPath (param) {
-    const map = this.getMap()
-    if (!this._geometry || !map || map.isInteracting()) {
-      return
-    }
-    const containerPoint = this._getMouseContainerPoint(param)
-    if (!this._isValidContainerPoint(containerPoint)) {
-      return
-    }
-    const coordinate = param['coordinate']
-    const registerMode = this._getRegisterMode()
-    const path = this._clickCoords.slice(0, this._historyPointer)
-    if (path && path.length > 0 && coordinate.equals(path[path.length - 1])) {
-      return
-    }
-    registerMode['update'](path.concat([coordinate]), this._geometry, param)
-
-    /**
-     * mousemove event
-     */
-    this._fireEvent('mousemove', param)
-  }
-
-  /**
-   * dbclick fro path
-   * @param param
-   * @private
-   */
-  _dblclickForPath (param) {
-    if (!this._geometry) {
-      return
-    }
-    const containerPoint = this._getMouseContainerPoint(param)
-    if (!this._isValidContainerPoint(containerPoint)) {
-      return
-    }
-    const registerMode = this._getRegisterMode()
-    const coordinate = param['coordinate']
-    const path = this._clickCoords
-    path.push(coordinate)
-    if (path.length < 2) {
-      return
-    }
-    // 去除重复的端点
-    const nIndexes = []
-    for (let i = 1, len = path.length; i < len; i++) {
-      if (path[i].x === path[i - 1].x && path[i].y === path[i - 1].y) {
-        nIndexes.push(i)
-      }
-    }
-    for (let i = nIndexes.length - 1; i >= 0; i--) {
-      path.splice(nIndexes[i], 1)
-    }
-
-    if (path.length < 2 || (this._geometry && (this._geometry instanceof Polygon) && path.length < 3)) {
-      return
-    }
-    registerMode['update'](path, this._geometry, param)
-    this.endDraw(param)
-  }
-
-  /**
-   * mouseup for path
-   * @param param
-   * @private
-   */
-  _mouseUpForPath (param) {
-    if (!this._geometry) {
-      return
-    }
-    const containerPoint = this._getMouseContainerPoint(param)
-    if (!this._isValidContainerPoint(containerPoint)) {
-      return
-    }
-    const registerMode = this._getRegisterMode()
-    const coordinate = param['coordinate']
-    const path = this._clickCoords
-    path.push(coordinate)
-    if (path.length < 2) {
-      return
-    }
-    // 去除重复的端点
-    const nIndexes = []
-    for (let i = 1, len = path.length; i < len; i++) {
-      if (path[i].x === path[i - 1].x && path[i].y === path[i - 1].y) {
-        nIndexes.push(i)
-      }
-    }
-    for (let i = nIndexes.length - 1; i >= 0; i--) {
-      path.splice(nIndexes[i], 1)
-    }
-
-    if (path.length < 2 || (this._geometry && (this._geometry instanceof Polygon) && path.length < 3)) {
-      return
-    }
-    registerMode['update'](path, this._geometry, param)
-    this.endDraw(param)
-  }
-
-  /**
-   * when nousedown start draw geometry
-   * @param param
-   * @returns {boolean}
-   * @private
-   */
-  _mousedownToDraw (param) {
-    const map = this._map
-    const registerMode = this._getRegisterMode()
-    const me = this
-    const firstPoint = this._getMouseContainerPoint(param)
-    if (!this._isValidContainerPoint(firstPoint)) {
-      return false
-    }
-
-    function genGeometry (evt) {
-      const symbol = me.getSymbol()
-      let geometry = me._geometry
-      if (!geometry) {
-        geometry = registerMode['create'](evt.coordinate, evt)
-        geometry.setSymbol(symbol)
-        me._addGeometryToStage(geometry)
-        me._geometry = geometry
-      } else {
-        registerMode['update'](evt.coordinate, geometry, evt)
-      }
-    }
-
-    /**
-     * handle mouse move
-     * @param evt
-     * @returns {boolean}
-     */
-    const onMouseMove = function (evt) {
-      if (!this._geometry) {
-        return false
-      }
-      const current = this._getMouseContainerPoint(evt)
-      if (!this._isValidContainerPoint(current)) {
-        return false
-      }
-      genGeometry(evt)
-      this._fireEvent('mousemove', param)
-      return false
-    }
-
-    /**
-     * handle mouse up
-     * @param evt
-     * @returns {boolean}
-     */
-    const onMouseUp = function (evt) {
-      map.off('mousemove', onMouseMove, this)
-      map.off('mouseup', onMouseUp, this)
-      if (!this.options['ignoreMouseleave']) {
-        map.off('mouseleave', onMouseUp, this)
-      }
-      if (!this._geometry) {
-        return false
-      }
-      const current = this._getMouseContainerPoint(evt)
-      if (this._isValidContainerPoint(current)) {
-        genGeometry(evt)
-      }
-      this.endDraw(param)
-      return false
-    }
-
-    this._fireEvent('drawstart', param)
-    genGeometry(param)
-    map.on('mousemove', onMouseMove, this)
-    map.on('mouseup', onMouseUp, this)
-    if (!this.options['ignoreMouseleave']) {
-      map.on('mouseleave', onMouseUp, this)
-    }
-    return false
-  }
-
-  /**
-   * get register events
+   * 创建矢量图层
+   * @param layerName
    * @returns {*}
+   * @private
    */
-  getEvents () {
-    const action = this._getRegisterMode()['action']
-    if (action === 'clickDblclick') {
-      return {
-        'click': this._clickForPath,
-        'mousemove': this._mousemoveForPath,
-        'dblclick': this._dblclickForPath
-      }
-    } else if (action === 'click') {
-      return {
-        'click': this._clickForPoint
-      }
-    } else if (action === 'drag') {
-      return {
-        'mousedown': this._mousedownToDraw
-      }
-    } else if (action === 'mouseup') {
-      return {
-        'mousedown': this._mousedownToDraw,
-        'mousemove': this._mousemoveForPath,
-        'mouseup': this._mouseUpForPath
-      }
+  _getDrawLayer (layerName) {
+    let drawToolLayer = this._map.getLayer(layerName)
+    if (!drawToolLayer) {
+      drawToolLayer = new maptalks.VectorLayer(layerName, {
+        'enableSimplify': false
+      })
+      this._map.addLayer(drawToolLayer)
     }
-    return null
+    return drawToolLayer
+  }
+
+  /**
+   * fire event
+   * @param eventName
+   * @param param
+   * @private
+   */
+  _fireEvent (eventName, param = {}) {
+    if (this._geometry) {
+      param['geometry'] = this._getRegisterMode()['generate'](this._geometry).copy()
+    }
+    maptalks.MapTool.prototype._fireEvent.call(this, eventName, param)
+  }
+
+  /**
+   * when layer add, check register mode
+   */
+  onAdd () {
+    this._getRegisterMode()
+  }
+
+  /**
+   * handle enAble event
+   * @returns {PlotDraw}
+   */
+  onEnable () {
+    this._deactiveMapInteractions()
+    this.drawLayer = this._getDrawLayer(this.layerName)
+    this._clearStage()
+    this._loadResources()
+    return this
+  }
+
+  /**
+   * handle disable event
+   * @returns {PlotDraw}
+   */
+  onDisable () {
+    const map = this.getMap()
+    this._activateMapInteractions()
+    this.endDraw()
+    if (this._map) {
+      map.removeLayer(this._getDrawLayer(this.layerName))
+    }
+    return this
+  }
+
+  /**
+   * 结束当前绘制
+   * @param param
+   * @returns {PlotDraw}
+   */
+  endDraw (param = {}) {
+    if (!this._geometry || this._ending) {
+      return this
+    }
+    this._ending = true
+    const geometry = this._geometry
+    this._clearStage()
+    this._geometry = geometry
+    this._fireEvent('drawend', param)
+    delete this._geometry
+    if (this.options['once']) {
+      this.disable()
+    }
+    delete this._ending
+    return this
+  }
+
+  /**
+   * 加载资源
+   * @private
+   */
+  _loadResources () {
+    const symbol = this.getSymbol()
+    const resources = maptalks.Util.getExternalResources(symbol)
+    if (resources.length > 0) {
+      this.drawLayer._getRenderer().loadResources(resources)
+    }
   }
 
   /**
@@ -331,7 +476,6 @@ class PlotDraw extends maptalks.DrawTool {
           let desc = Object.getOwnPropertyDescriptor(modes, key)
           let _key = key.toLowerCase()
           Object.defineProperty(registeredMode, _key, desc)
-          console.log(registeredMode)
         }
       }
     }
