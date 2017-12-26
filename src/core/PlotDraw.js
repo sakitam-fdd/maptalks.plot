@@ -6,7 +6,9 @@
 import * as maptalks from 'maptalks'
 import {BASE_LAYERNAME} from '../Constants'
 import RegisterModes from '../geometry'
-import { merge } from '../utils/utils'
+import {merge} from '../utils/utils'
+import {MathDistance} from '../geometry/helper'
+
 const _options = {
   'symbol': {
     'lineColor': '#000',
@@ -29,6 +31,7 @@ const stopPropagation = function (e) {
   }
   return this
 }
+
 class PlotDraw extends maptalks.MapTool {
   constructor (options = {}) {
     const $options = merge(_options, options)
@@ -188,6 +191,14 @@ class PlotDraw extends maptalks.MapTool {
     const registerMode = this._getRegisterMode()
     const coordinate = event['coordinate']
     if (this._geometry) {
+      if (!registerMode.freehand) {
+        if (MathDistance([
+          coordinate['x'], coordinate['y']], [
+          this._clickCoords[this._clickCoords.length - 1]['x'],
+          this._clickCoords[this._clickCoords.length - 1]['y']]) < 0.0001) {
+          return
+        }
+      }
       if (!(this._historyPointer === null)) {
         this._clickCoords = this._clickCoords.slice(0, this._historyPointer)
       }
@@ -232,14 +243,20 @@ class PlotDraw extends maptalks.MapTool {
    */
   _mouseMoveHandler (event) {
     const map = this.getMap()
+    const coordinate = event['coordinate']
     if (!this._geometry || !map || map.isInteracting()) {
+      return
+    }
+    if (MathDistance([
+      coordinate['x'], coordinate['y']], [
+      this._clickCoords[this._clickCoords.length - 1]['x'],
+      this._clickCoords[this._clickCoords.length - 1]['y']]) < 0.0001) {
       return
     }
     const containerPoint = this._getMouseContainerPoint(event)
     if (!this._isValidContainerPoint(containerPoint)) {
       return
     }
-    const coordinate = event['coordinate']
     const registerMode = this._getRegisterMode()
     const path = this._clickCoords.slice(0, this._historyPointer)
     if (path && path.length > 0 && coordinate.equals(path[path.length - 1])) {

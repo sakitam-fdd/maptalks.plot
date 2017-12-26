@@ -22,30 +22,15 @@ class Curve extends maptalks.LineString {
   }
 
   _generate () {
-    let count = this._coordinates.length
+    const _points = Coordinate.toNumberArrays(this._coordinates)
+    let count = _points.length
     if (count < 2) {
       return false
     } else if (count === 2) {
       this.setCoordinates(this._coordinates)
     } else {
-      let _coordinates = this._coordinates.map(_item => {
-        if (_item && _item.hasOwnProperty('x')) {
-          return [_item['x'], _item['y']]
-        } else if (Array.isArray(_item)) {
-          return _item
-        }
-      })
-      let points = getCurvePoints(0.3, _coordinates)
-      if (Array.isArray(points)) {
-        let _points = points.map(_item => {
-          if (Array.isArray(_item)) {
-            return new Coordinate(_item[0], _item[1])
-          } else {
-            return _item
-          }
-        })
-        this.setCoordinates(_points)
-      }
+      let points = getCurvePoints(0.3, _points)
+      this.setCoordinates(Coordinate.toCoordinates(points))
     }
   }
 

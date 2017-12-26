@@ -1,3 +1,9 @@
+/**
+ * Created by FDD on 2017/12/12.
+ * @desc 线
+ * @Inherits maptalks.LineString
+ */
+
 import * as maptalks from 'maptalks'
 const Coordinate = maptalks.Coordinate
 const options = {

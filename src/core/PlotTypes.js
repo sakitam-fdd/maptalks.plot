@@ -1,6 +1,3 @@
-/**
- * Created by FDD on 2017/5/20.
- */
 const TextArea = 'TextArea' // 文本标绘（特殊）
 const ARC = 'Arc'
 const CURVE = 'Curve'
