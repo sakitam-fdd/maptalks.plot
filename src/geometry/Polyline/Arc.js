@@ -24,7 +24,8 @@ class Arc extends maptalks.LineString {
   }
 
   _generate () {
-    let count = this._coordinates.length
+    const _points = Coordinate.toNumberArrays(this._coordinates)
+    let count = _points.length
     if (count < 2) return
     if (count === 2) {
       this.setCoordinates(this._coordinates)
@@ -34,33 +35,21 @@ class Arc extends maptalks.LineString {
         pnt3, startAngle,
         endAngle
       ] = [
-        this._coordinates[0], this._coordinates[1],
-        this._coordinates[2], null, null
+        _points[0], _points[1],
+        _points[2], null, null
       ]
-      let center = getCircleCenterOfThreePoints([pnt1['x'], pnt1['y']], [pnt2['x'], pnt2['y']], [pnt3['x'], pnt3['y']])
-      let radius = MathDistance([pnt1['x'], pnt1['y']], center)
-      let angle1 = getAzimuth([pnt1['x'], pnt1['y']], center)
-      let angle2 = getAzimuth([pnt2['x'], pnt2['y']], center)
-      if (isClockWise([pnt1['x'], pnt1['y']], [pnt2['x'], pnt2['y']], [pnt3['x'], pnt3['y']])) {
+      let center = getCircleCenterOfThreePoints(pnt1, pnt2, pnt3)
+      let radius = MathDistance(pnt1, center)
+      let angle1 = getAzimuth(pnt1, center)
+      let angle2 = getAzimuth(pnt2, center)
+      if (isClockWise(pnt1, pnt2, pnt3)) {
         startAngle = angle2
         endAngle = angle1
       } else {
         startAngle = angle1
         endAngle = angle2
       }
-      let points = getArcPoints(center, radius, startAngle, endAngle)
-      if (Array.isArray(points)) {
-        let _points = points.map(_item => {
-          if (Array.isArray(_item)) {
-            if (!isNaN(_item[0]) && !isNaN(_item[1])) {
-              return new Coordinate(_item[0], _item[1])
-            }
-          } else {
-            return _item
-          }
-        })
-        this.setCoordinates(_points)
-      }
+      this.setCoordinates(Coordinate.toCoordinates(getArcPoints(center, radius, startAngle, endAngle)))
     }
   }
 

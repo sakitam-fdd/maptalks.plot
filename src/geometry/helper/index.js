@@ -1,4 +1,6 @@
 import * as Constants from '../../Constants'
+import * as maptalks from 'maptalks'
+const Coordinate = maptalks.Coordinate
 /**
  * 计算两个坐标之间的距离
  * @param pnt1
@@ -487,4 +489,28 @@ export const getQuadricBSplineFactor = (k, t) => {
     res = Math.pow(t, 2) / 2
   }
   return res
+}
+
+export const getCoordinatesArray = (coordinates) => {
+  const _coordinates = []
+  for (let i = 0; i < coordinates.length; i++) {
+    if (coordinates[i] && coordinates[i].hasOwnProperty('x')) {
+      _coordinates.push([coordinates[i]['x'], coordinates[i]['y']])
+    } else {
+      _coordinates.push(coordinates[i])
+    }
+  }
+  return _coordinates
+}
+
+export const getCoordinatesObject = (coordinates) => {
+  const _coordinates = []
+  for (let i = 0; i < coordinates.length; i++) {
+    if (coordinates[i] && Array.isArray(coordinates[i])) {
+      _coordinates.push(new Coordinate(coordinates[i][0], coordinates[i][1]))
+    } else {
+      _coordinates.push(coordinates[i])
+    }
+  }
+  return _coordinates
 }

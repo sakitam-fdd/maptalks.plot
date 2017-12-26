@@ -24,6 +24,7 @@
   var map = new maptalks.Map('map', {
     center: [-0.113049, 51.498568],
     zoom: 14,
+    projection: 'EPSG:4326',
     attribution: {
       content: '&copy; <a href="http://osm.org">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/">CARTO</a>'
     },
@@ -42,7 +43,11 @@
     console.log(param.geometry);
     layer.addGeometry(param.geometry);
   });
-  var items = ['Polyline', 'Curve', 'Arc', 'FreeLine'].map(function (value) {
+  var items = ['Polyline', 'Curve',
+    'Arc', 'FreeLine', 'AttackArrow',
+    'ClosedCurve', 'FreePolygon',
+    'GatheringPlace', 'Lune', 'Sector', 'Polygon',
+    'RectAngle'].map(function (value) {
     return {
       item: value,
       click: function () {
