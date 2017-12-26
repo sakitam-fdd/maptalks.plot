@@ -11,6 +11,10 @@ import FreeLine from './Polyline/FreeLine'
 
 import AttackArrow from './Arrow/AttackArrow'
 
+import CurveFlag from './Flag/CurveFlag'
+import RectFlag from './Flag/RectFlag'
+import TriangleFlag from './Flag/TriangleFlag'
+
 import Lune from './Polygon/Lune'
 import Sector from './Polygon/Sector'
 import ClosedCurve from './Polygon/ClosedCurve'
@@ -188,6 +192,54 @@ RegisterModes[PlotTypes.GATHERING_PLACE] = {
   'action': ['click', 'mousemove', 'dblclick'],
   'create': function (path) {
     return new GatheringPlace(path)
+  },
+  'update': function (path, geometry) {
+    geometry.setPoints(path)
+  },
+  'generate': function (geometry) {
+    return new Polygon(geometry.getCoordinates(), {
+      'symbol': geometry.getSymbol()
+    })
+  }
+}
+RegisterModes[PlotTypes.CURVEFLAG] = {
+  'freehand': false,
+  'limitClickCount': 2,
+  'action': ['click', 'mousemove', 'click'],
+  'create': function (path) {
+    return new CurveFlag(path)
+  },
+  'update': function (path, geometry) {
+    geometry.setPoints(path)
+  },
+  'generate': function (geometry) {
+    return new Polygon(geometry.getCoordinates(), {
+      'symbol': geometry.getSymbol()
+    })
+  }
+}
+RegisterModes[PlotTypes.RECTFLAG] = {
+  'freehand': false,
+  'limitClickCount': 2,
+  'action': ['click', 'mousemove', 'click'],
+  'create': function (path) {
+    return new RectFlag(path)
+  },
+  'update': function (path, geometry) {
+    geometry.setPoints(path)
+  },
+  'generate': function (geometry) {
+    return new Polygon(geometry.getCoordinates(), {
+      'symbol': geometry.getSymbol()
+    })
+  }
+}
+RegisterModes[PlotTypes.TRIANGLEFLAG] = {
+  'freehand': false,
+  'limitClickCount': 2,
+  'action': ['click', 'mousemove', 'click'],
+  'create': function (path) {
+    return new TriangleFlag(path)
   },
   'update': function (path, geometry) {
     geometry.setPoints(path)
