@@ -3,6 +3,7 @@
 
 # User-specific stuff:
 .idea/
+dist/
 node_modules/
 coverage/
 npm-debug.log*
