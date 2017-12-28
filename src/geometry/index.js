@@ -9,6 +9,7 @@ import Curve from './Polyline/Curve'
 import Polyline from './Polyline/Polyline'
 import FreeLine from './Polyline/FreeLine'
 
+import Circle from './Circle/Circle'
 import AttackArrow from './Arrow/AttackArrow'
 
 import CurveFlag from './Flag/CurveFlag'
@@ -247,6 +248,27 @@ RegisterModes[PlotTypes.TRIANGLEFLAG] = {
   'generate': function (geometry) {
     return new Polygon(geometry.getCoordinates(), {
       'symbol': geometry.getSymbol()
+    })
+  }
+}
+RegisterModes[PlotTypes.CIRCLE] = {
+  'freehand': false,
+  'limitClickCount': 2,
+  'action': ['click', 'mousemove', 'click'],
+  'create': function (path) {
+    return new Circle(path)
+  },
+  'update': function (path, geometry) {
+    geometry.setPoints(path)
+  },
+  'generate': function (geometry) {
+    return new maptalks.Circle(geometry.getCenter(), geometry.getRadius(), {
+      symbol: {
+        lineColor: '#34495e',
+        lineWidth: 2,
+        polygonFill: '#1bbc9b',
+        polygonOpacity: 0.4
+      }
     })
   }
 }
