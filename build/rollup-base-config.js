@@ -70,6 +70,7 @@ module.exports = [
   {
     file: resolve(_package.unpkg),
     format: 'umd',
+    sourceMap: true,
     env: 'development'
   },
   {

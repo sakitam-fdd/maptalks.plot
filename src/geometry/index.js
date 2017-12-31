@@ -9,8 +9,16 @@ import Curve from './Polyline/Curve'
 import Polyline from './Polyline/Polyline'
 import FreeLine from './Polyline/FreeLine'
 
-import Circle from './Circle/Circle'
+import PlotCircle from './Circle/Circle'
+import PlotEllipse from './Circle/Ellipse'
 import AttackArrow from './Arrow/AttackArrow'
+import DoubleArrow from './Arrow/DoubleArrow'
+import FineArrow from './Arrow/FineArrow'
+import StraightArrow from './Arrow/StraightArrow'
+import AssaultDirection from './Arrow/AssaultDirection'
+import SquadCombat from './Arrow/SquadCombat'
+import TailedAttackArrow from './Arrow/TailedAttackArrow'
+import TailedSquadCombat from './Arrow/TailedSquadCombat'
 
 import CurveFlag from './Flag/CurveFlag'
 import RectFlag from './Flag/RectFlag'
@@ -25,7 +33,21 @@ import GatheringPlace from './Polygon/GatheringPlace'
 
 import * as PlotTypes from '../core/PlotTypes'
 const Polygon = maptalks.Polygon
+const Coordinate = maptalks.Coordinate
 const RegisterModes = {}
+RegisterModes[PlotTypes.POINT] = {
+  'freehand': false,
+  'limitClickCount': 1,
+  'action': ['click'],
+  'create': function (path) {
+    return new maptalks.Marker(path[0])
+  },
+  'update': function (path, geometry) {
+  },
+  'generate': function (geometry) {
+    return geometry
+  }
+}
 RegisterModes[PlotTypes.ARC] = {
   'freehand': false,
   'limitClickCount': 3,
@@ -92,6 +114,114 @@ RegisterModes[PlotTypes.ATTACK_ARROW] = {
     return new Polygon(geometry.getCoordinates(), {
       'symbol': geometry.getSymbol()
     })
+  }
+}
+RegisterModes[PlotTypes.DOUBLE_ARROW] = {
+  'freehand': false,
+  'limitClickCount': 4,
+  'action': ['click', 'mousemove', 'dblclick'],
+  'create': function (path) {
+    return new DoubleArrow(path)
+  },
+  'update': function (path, geometry) {
+    geometry.setPoints(path)
+  },
+  'generate': function (geometry) {
+    return new Polygon(geometry.getCoordinates(), {
+      'symbol': geometry.getSymbol()
+    })
+  }
+}
+RegisterModes[PlotTypes.FINE_ARROW] = {
+  'freehand': false,
+  'limitClickCount': 2,
+  'action': ['click', 'mousemove', 'click'],
+  'create': function (path) {
+    return new FineArrow(path)
+  },
+  'update': function (path, geometry) {
+    geometry.setPoints(path)
+  },
+  'generate': function (geometry) {
+    return new Polygon(geometry.getCoordinates(), {
+      'symbol': geometry.getSymbol()
+    })
+  }
+}
+RegisterModes[PlotTypes.ASSAULT_DIRECTION] = {
+  'freehand': false,
+  'limitClickCount': 2,
+  'action': ['click', 'mousemove', 'click'],
+  'create': function (path) {
+    return new AssaultDirection(path)
+  },
+  'update': function (path, geometry) {
+    geometry.setPoints(path)
+  },
+  'generate': function (geometry) {
+    return new Polygon(geometry.getCoordinates(), {
+      'symbol': geometry.getSymbol()
+    })
+  }
+}
+RegisterModes[PlotTypes.SQUAD_COMBAT] = {
+  'freehand': false,
+  'action': ['click', 'mousemove', 'dblclick'],
+  'create': function (path) {
+    return new SquadCombat(path)
+  },
+  'update': function (path, geometry) {
+    geometry.setPoints(path)
+  },
+  'generate': function (geometry) {
+    return new Polygon(geometry.getCoordinates(), {
+      'symbol': geometry.getSymbol()
+    })
+  }
+}
+RegisterModes[PlotTypes.TAILED_ATTACK_ARROW] = {
+  'freehand': false,
+  'action': ['click', 'mousemove', 'dblclick'],
+  'create': function (path) {
+    return new TailedAttackArrow(path)
+  },
+  'update': function (path, geometry) {
+    geometry.setPoints(path)
+  },
+  'generate': function (geometry) {
+    return new Polygon(geometry.getCoordinates(), {
+      'symbol': geometry.getSymbol()
+    })
+  }
+}
+RegisterModes[PlotTypes.TAILED_SQUAD_COMBAT] = {
+  'freehand': false,
+  'limitClickCount': 2,
+  'action': ['click', 'mousemove', 'dblclick'],
+  'create': function (path) {
+    return new TailedSquadCombat(path)
+  },
+  'update': function (path, geometry) {
+    geometry.setPoints(path)
+  },
+  'generate': function (geometry) {
+    return new Polygon(geometry.getCoordinates(), {
+      'symbol': geometry.getSymbol()
+    })
+  }
+}
+RegisterModes[PlotTypes.STRAIGHT_ARROW] = {
+  'freehand': false,
+  'limitClickCount': 2,
+  'action': ['click', 'mousemove', 'click'],
+  'create': function (path) {
+    return new StraightArrow(path)
+  },
+  'update': function (path, geometry) {
+    geometry.setPoints(path)
+  },
+  'generate': function (geometry) {
+    return geometry
   }
 }
 RegisterModes[PlotTypes.CLOSED_CURVE] = {
@@ -252,24 +382,42 @@ RegisterModes[PlotTypes.TRIANGLEFLAG] = {
   }
 }
 RegisterModes[PlotTypes.CIRCLE] = {
-  'freehand': false,
-  'limitClickCount': 2,
-  'action': ['click', 'mousemove', 'click'],
-  'create': function (path) {
-    return new Circle(path)
+  'freehand': true,
+  'action': ['mousedown', 'drag', 'mouseup'],
+  'create': function (coordinate) {
+    return new PlotCircle(coordinate[0], 0)
   },
   'update': function (path, geometry) {
-    geometry.setPoints(path)
+    const map = geometry.getMap()
+    const radius = map.computeLength(geometry.getCenter(), path[path.length - 1])
+    geometry.setRadius(radius)
   },
   'generate': function (geometry) {
-    return new maptalks.Circle(geometry.getCenter(), geometry.getRadius(), {
-      symbol: {
-        lineColor: '#34495e',
-        lineWidth: 2,
-        polygonFill: '#1bbc9b',
-        polygonOpacity: 0.4
-      }
-    })
+    return geometry
+  }
+}
+RegisterModes[PlotTypes.ELLIPSE] = {
+  'freehand': true,
+  'action': ['mousedown', 'drag', 'mouseup'],
+  'create': function (coordinate) {
+    return new PlotEllipse(coordinate[0], 0, 0)
+  },
+  'update': function (path, geometry) {
+    const map = geometry.getMap()
+    const center = geometry.getCenter()
+    const rx = map.computeLength(center, new Coordinate({
+      x: path[path.length - 1].x,
+      y: center.y
+    }))
+    const ry = map.computeLength(center, new Coordinate({
+      x: center.x,
+      y: path[path.length - 1].y
+    }))
+    geometry.setWidth(rx * 2)
+    geometry.setHeight(ry * 2)
+  },
+  'generate': function (geometry) {
+    return geometry
   }
 }
 

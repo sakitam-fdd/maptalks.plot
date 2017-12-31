@@ -54,7 +54,7 @@ class AttackArrow extends maptalks.Polygon {
         let headPnts = this._getArrowHeadPoints(bonePnts, tailLeft, tailRight)
         let [neckLeft, neckRight] = [headPnts[0], headPnts[4]]
         let tailWidthFactor = MathDistance(tailLeft, tailRight) / getBaseLength(bonePnts)
-        let bodyPnts = this._getArrowBodyPoints(bonePnts, neckLeft, neckRight, tailWidthFactor)
+        let bodyPnts = AttackArrow._getArrowBodyPoints(bonePnts, neckLeft, neckRight, tailWidthFactor)
         let count = bodyPnts.length
         let leftPnts = [tailLeft].concat(bodyPnts.slice(0, count / 2))
         leftPnts.push(neckLeft)
@@ -100,6 +100,32 @@ class AttackArrow extends maptalks.Polygon {
     return [neckLeft, headLeft, headPnt, headRight, neckRight]
   }
 
+  setPoints (coordinates) {
+    this._coordinates = !coordinates ? [] : coordinates
+    if (this._coordinates.length >= 1) {
+      this._generate()
+    }
+  }
+
+  _exportGeoJSONGeometry () {
+    const coordinates = Coordinate.toNumberArrays([this.getShell()])
+    return {
+      'type': 'Polygon',
+      'coordinates': coordinates
+    }
+  }
+
+  _toJSON (options) {
+    const opts = maptalks.Util.extend({}, options)
+    opts.geometry = false
+    const feature = this.toGeoJSON(opts)
+    return {
+      'feature': feature,
+      'coordinates': feature['coordinates'],
+      'subType': 'AttackArrow'
+    }
+  }
+
   /**
    * 插值面部分数据
    * @param points
@@ -108,7 +134,7 @@ class AttackArrow extends maptalks.Polygon {
    * @param tailWidthFactor
    * @returns {*|T[]|string}
    */
-  _getArrowBodyPoints (points, neckLeft, neckRight, tailWidthFactor) {
+  static _getArrowBodyPoints (points, neckLeft, neckRight, tailWidthFactor) {
     let allLen = wholeDistance(points)
     let len = getBaseLength(points)
     let tailWidth = len * tailWidthFactor
@@ -127,31 +153,9 @@ class AttackArrow extends maptalks.Polygon {
     return leftBodyPnts.concat(rightBodyPnts)
   }
 
-  setPoints (coordinates) {
-    this._coordinates = !coordinates ? [] : coordinates
-    if (this._coordinates.length >= 1) {
-      this._generate()
-    }
-  }
-
-  _exportGeoJSONGeometry () {
-    const coordinates = Coordinate.toNumberArrays([this.getShell()])
-    return {
-      'type': 'Polygon',
-      'coordinates': coordinates
-    }
-  }
-
-  _toJSON (options) {
-    return {
-      'feature': this.toGeoJSON(options),
-      'subType': 'AttackArrow'
-    }
-  }
-
   static fromJSON (json) {
     const feature = json['feature']
-    const attackArrow = new AttackArrow(json['coordinates'], json['width'], json['height'], json['options'])
+    const attackArrow = new AttackArrow(json['coordinates'], json['options'])
     attackArrow.setProperties(feature['properties'])
     return attackArrow
   }
