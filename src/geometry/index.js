@@ -111,9 +111,7 @@ RegisterModes[PlotTypes.ATTACK_ARROW] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
 RegisterModes[PlotTypes.DOUBLE_ARROW] = {

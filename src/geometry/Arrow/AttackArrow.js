@@ -43,27 +43,27 @@ class AttackArrow extends maptalks.Polygon {
       if (count === 2) {
         this.setCoordinates([this._coordinates])
       } else {
-        let pnts = Coordinate.toNumberArrays(this._coordinates)
-        let [tailLeft, tailRight] = [pnts[0], pnts[1]]
-        if (isClockWise(pnts[0], pnts[1], pnts[2])) {
-          tailLeft = pnts[1]
-          tailRight = pnts[0]
+        let _points = Coordinate.toNumberArrays(this._coordinates)
+        let [tailLeft, tailRight] = [_points[0], _points[1]]
+        if (isClockWise(_points[0], _points[1], _points[2])) {
+          tailLeft = _points[1]
+          tailRight = _points[0]
         }
         let midTail = Mid(tailLeft, tailRight)
-        let bonePnts = [midTail].concat(pnts.slice(2))
-        let headPnts = this._getArrowHeadPoints(bonePnts, tailLeft, tailRight)
-        let [neckLeft, neckRight] = [headPnts[0], headPnts[4]]
-        let tailWidthFactor = MathDistance(tailLeft, tailRight) / getBaseLength(bonePnts)
-        let bodyPnts = AttackArrow._getArrowBodyPoints(bonePnts, neckLeft, neckRight, tailWidthFactor)
-        let count = bodyPnts.length
-        let leftPnts = [tailLeft].concat(bodyPnts.slice(0, count / 2))
-        leftPnts.push(neckLeft)
-        let rightPnts = [tailRight].concat(bodyPnts.slice(count / 2, count))
-        rightPnts.push(neckRight)
-        leftPnts = getQBSplinePoints(leftPnts)
-        rightPnts = getQBSplinePoints(rightPnts)
+        let bonePoints = [midTail].concat(_points.slice(2))
+        let headPoints = this._getArrowHeadPoints(bonePoints, tailLeft, tailRight)
+        let [neckLeft, neckRight] = [headPoints[0], headPoints[4]]
+        let tailWidthFactor = MathDistance(tailLeft, tailRight) / getBaseLength(bonePoints)
+        let bodyPoints = AttackArrow._getArrowBodyPoints(bonePoints, neckLeft, neckRight, tailWidthFactor)
+        let count = bodyPoints.length
+        let leftPoints = [tailLeft].concat(bodyPoints.slice(0, count / 2))
+        leftPoints.push(neckLeft)
+        let rightPoints = [tailRight].concat(bodyPoints.slice(count / 2, count))
+        rightPoints.push(neckRight)
+        leftPoints = getQBSplinePoints(leftPoints)
+        rightPoints = getQBSplinePoints(rightPoints)
         this.setCoordinates([
-          Coordinate.toCoordinates(leftPnts.concat(headPnts, rightPnts.reverse()))
+          Coordinate.toCoordinates(leftPoints.concat(headPoints, rightPoints.reverse()))
         ])
       }
     } catch (e) {
@@ -140,17 +140,17 @@ class AttackArrow extends maptalks.Polygon {
     let tailWidth = len * tailWidthFactor
     let neckWidth = MathDistance(neckLeft, neckRight)
     let widthDif = (tailWidth - neckWidth) / 2
-    let [tempLen, leftBodyPnts, rightBodyPnts] = [0, [], []]
+    let [tempLen, leftBodyPoints, rightBodyPoints] = [0, [], []]
     for (let i = 1; i < points.length - 1; i++) {
       let angle = getAngleOfThreePoints(points[i - 1], points[i], points[i + 1]) / 2
       tempLen += MathDistance(points[i - 1], points[i])
       let w = (tailWidth / 2 - tempLen / allLen * widthDif) / Math.sin(angle)
       let left = getThirdPoint(points[i - 1], points[i], Math.PI - angle, w, true)
       let right = getThirdPoint(points[i - 1], points[i], angle, w, false)
-      leftBodyPnts.push(left)
-      rightBodyPnts.push(right)
+      leftBodyPoints.push(left)
+      rightBodyPoints.push(right)
     }
-    return leftBodyPnts.concat(rightBodyPnts)
+    return leftBodyPoints.concat(rightBodyPoints)
   }
 
   static fromJSON (json) {
