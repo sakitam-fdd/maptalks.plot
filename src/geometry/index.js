@@ -292,7 +292,7 @@ RegisterModes[PlotTypes.RECTANGLE] = {
     return new RectAngle(path)
   },
   'update': function (path, geometry) {
-    geometry.setCoordinates(path)
+    geometry.setPoints(path)
   },
   'generate': function (geometry) {
     return new Polygon(geometry.getCoordinates(), {
