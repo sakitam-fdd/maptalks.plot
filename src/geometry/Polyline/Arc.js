@@ -65,6 +65,7 @@ class Arc extends maptalks.LineString {
     const coordinates = Coordinate.toNumberArrays(points)
     return {
       'type': 'LineString',
+      'subType': 'Arc',
       'coordinates': coordinates
     }
   }

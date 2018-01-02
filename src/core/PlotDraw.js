@@ -191,7 +191,11 @@ class PlotDraw extends maptalks.MapTool {
     const registerMode = this._getRegisterMode()
     const coordinate = event['coordinate']
     if (this._geometry) {
-      if (!registerMode.freehand) {
+      if (this.getMode() === 'point') {
+        this.endDraw(event)
+        return
+      }
+      if (!registerMode.freehand && registerMode['limitClickCount'] > 1) {
         if (MathDistance([
           coordinate['x'], coordinate['y']], [
           this._clickCoords[this._clickCoords.length - 1]['x'],

@@ -43,11 +43,10 @@
     console.log(param.geometry);
     layer.addGeometry(param.geometry);
   });
-  var items = ['Polyline', 'Curve',
+  var itemsLeft = ['Point', 'Polyline', 'Curve',
     'Arc', 'FreeLine', 'AttackArrow',
     'ClosedCurve', 'FreePolygon',
-    'GatheringPlace', 'Lune', 'Sector', 'Polygon',
-    'RectAngle'].map(function (value) {
+    'GatheringPlace', 'Lune', 'Sector'].map(function (value) {
     return {
       item: value,
       click: function () {
@@ -55,11 +54,79 @@
       }
     };
   });
+  var itemsCenter = ['AttackArrow', 'DoubleArrow', 'FineArrow',
+    'StraightArrow', 'AssaultDirection', 'SquadCombat', 'TailedAttackArrow', 'TailedSquadCombat'].map(function (value) {
+    return {
+      item: value,
+      click: function () {
+        drawTool.setMode(value).enable();
+      }
+    };
+  });
+  var itemsRight = ['Polygon',
+    'CurveFlag', 'TriangleFlag', 'RectFlag',
+    'RectAngle', 'Circle', 'Ellipse'].map(function (value) {
+    return {
+      item: value,
+      click: function () {
+        drawTool.setMode(value).enable();
+      }
+    };
+  });
+  // left
   new maptalks.control.Toolbar({
+    position : 'top-left',
     items: [
       {
         item: 'Shape',
-        children: items
+        children: itemsLeft
+      },
+      {
+        item: 'Disable',
+        click: function () {
+          drawTool.disable();
+        }
+      },
+      {
+        item: 'Clear',
+        click: function () {
+          layer.clear();
+        }
+      }
+    ]
+  }).addTo(map);
+  // center
+  new maptalks.control.Toolbar({
+    position : {
+      'top' : 20,
+      'left' : 580
+    },
+    items: [
+      {
+        item: 'Shape',
+        children: itemsCenter
+      },
+      {
+        item: 'Disable',
+        click: function () {
+          drawTool.disable();
+        }
+      },
+      {
+        item: 'Clear',
+        click: function () {
+          layer.clear();
+        }
+      }
+    ]
+  }).addTo(map);
+  // right
+  new maptalks.control.Toolbar({
+    position : 'top-right',
+    items: [
+      {
+        item: 'Shape',
+        children: itemsRight
       },
       {
         item: 'Disable',
