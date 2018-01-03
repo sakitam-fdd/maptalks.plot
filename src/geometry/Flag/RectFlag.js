@@ -17,6 +17,14 @@ class RectFlag extends maptalks.Polygon {
   }
 
   /**
+   * 获取geom类型
+   * @returns {string}
+   */
+  getPlotType () {
+    return this.type
+  }
+
+  /**
    * handle coordinates
    * @private
    */
@@ -40,6 +48,10 @@ class RectFlag extends maptalks.Polygon {
     }
   }
 
+  getCoordinates () {
+    return this._coordinates
+  }
+
   _exportGeoJSONGeometry () {
     const coordinates = Coordinate.toNumberArrays([this.getShell()])
     return {
@@ -49,9 +61,17 @@ class RectFlag extends maptalks.Polygon {
   }
 
   _toJSON (options) {
+    const opts = maptalks.Util.extend({}, options)
+    const coordinates = this.getCoordinates()
+    opts.geometry = false
+    const feature = this.toGeoJSON(opts)
+    feature['geometry'] = {
+      'type': 'Polygon'
+    }
     return {
-      'feature': this.toGeoJSON(options),
-      'subType': 'RectFlag'
+      'feature': feature,
+      'subType': 'RectFlag',
+      'coordinates': coordinates
     }
   }
   /**
@@ -78,7 +98,7 @@ class RectFlag extends maptalks.Polygon {
 
   static fromJSON (json) {
     const feature = json['feature']
-    const rectFlag = new RectFlag(json['coordinates'], json['width'], json['height'], json['options'])
+    const rectFlag = new RectFlag(json['coordinates'], json['options'])
     rectFlag.setProperties(feature['properties'])
     return rectFlag
   }

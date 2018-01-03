@@ -20,6 +20,14 @@ class CurveFlag extends maptalks.Polygon {
   }
 
   /**
+   * 获取geom类型
+   * @returns {string}
+   */
+  getPlotType () {
+    return this.type
+  }
+
+  /**
    * handle coordinates
    * @private
    */
@@ -52,9 +60,17 @@ class CurveFlag extends maptalks.Polygon {
   }
 
   _toJSON (options) {
+    const opts = maptalks.Util.extend({}, options)
+    const coordinates = this.getCoordinates()
+    opts.geometry = false
+    const feature = this.toGeoJSON(opts)
+    feature['geometry'] = {
+      'type': 'Polygon'
+    }
     return {
-      'feature': this.toGeoJSON(options),
-      'subType': 'CurveFlag'
+      'feature': feature,
+      'subType': 'CurveFlag',
+      'coordinates': coordinates
     }
   }
   /**
@@ -105,9 +121,9 @@ class CurveFlag extends maptalks.Polygon {
 
   static fromJSON (json) {
     const feature = json['feature']
-    const attackArrow = new CurveFlag(json['coordinates'], json['width'], json['height'], json['options'])
-    attackArrow.setProperties(feature['properties'])
-    return attackArrow
+    const curveFlag = new CurveFlag(json['coordinates'], json['options'])
+    curveFlag.setProperties(feature['properties'])
+    return curveFlag
   }
 }
 

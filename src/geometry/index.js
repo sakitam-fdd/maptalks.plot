@@ -24,6 +24,7 @@ import CurveFlag from './Flag/CurveFlag'
 import RectFlag from './Flag/RectFlag'
 import TriangleFlag from './Flag/TriangleFlag'
 
+import PlotPolygon from './Polygon/Polygon'
 import Lune from './Polygon/Lune'
 import Sector from './Polygon/Sector'
 import ClosedCurve from './Polygon/ClosedCurve'
@@ -273,15 +274,13 @@ RegisterModes[PlotTypes.POLYGON] = {
   'freehand': false,
   'action': ['click', 'mousemove', 'dblclick'],
   'create': function (path) {
-    return new Polygon(path)
+    return new PlotPolygon(path)
   },
   'update': function (path, geometry) {
-    geometry.setCoordinates(path)
+    geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
 RegisterModes[PlotTypes.RECTANGLE] = {
@@ -295,9 +294,7 @@ RegisterModes[PlotTypes.RECTANGLE] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
 RegisterModes[PlotTypes.FREE_POLYGON] = {
@@ -342,9 +339,7 @@ RegisterModes[PlotTypes.CURVEFLAG] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
 RegisterModes[PlotTypes.RECTFLAG] = {
@@ -358,9 +353,7 @@ RegisterModes[PlotTypes.RECTFLAG] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
 RegisterModes[PlotTypes.TRIANGLEFLAG] = {
@@ -374,11 +367,10 @@ RegisterModes[PlotTypes.TRIANGLEFLAG] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
+// 圆
 RegisterModes[PlotTypes.CIRCLE] = {
   'freehand': true,
   'action': ['mousedown', 'drag', 'mouseup'],
@@ -394,6 +386,7 @@ RegisterModes[PlotTypes.CIRCLE] = {
     return geometry
   }
 }
+// 椭圆
 RegisterModes[PlotTypes.ELLIPSE] = {
   'freehand': true,
   'action': ['mousedown', 'drag', 'mouseup'],

@@ -1,15 +1,15 @@
 /**
- * Created by FDD on 2017/12/26.
- * @desc 规则矩形
+ * Created by FDD on 2018/01/03.
+ * @desc 面
  * @Inherits maptalks.Polygon
  */
 import * as maptalks from 'maptalks'
 const Coordinate = maptalks.Coordinate
 
-class RectAngle extends maptalks.Polygon {
+class PlotPolygon extends maptalks.Polygon {
   constructor (coordinates, options = {}) {
     super(options)
-    this.type = 'RectAngle'
+    this.type = 'PlotPolygon'
     this._coordinates = []
     if (coordinates) {
       this.setPoints(coordinates)
@@ -29,15 +29,7 @@ class RectAngle extends maptalks.Polygon {
    * @private
    */
   _generate () {
-    const count = this._coordinates.length
-    let _points = Coordinate.toNumberArrays(this._coordinates)
-    if (count < 2) return
-    if (count === 2) {
-      let start = _points[0]
-      let end = _points[1]
-      let coordinates = [start, [start[0], end[1]], end, [end[0], start[1]], start]
-      this.setCoordinates(Coordinate.toCoordinates(coordinates))
-    }
+    this.setCoordinates(this._coordinates)
   }
 
   getCoordinates () {
@@ -69,19 +61,19 @@ class RectAngle extends maptalks.Polygon {
     }
     return {
       'feature': feature,
-      'subType': 'RectAngle',
+      'subType': 'PlotPolygon',
       'coordinates': coordinates
     }
   }
 
   static fromJSON (json) {
     const feature = json['feature']
-    const reactAngle = new RectAngle(json['coordinates'], json['options'])
-    reactAngle.setProperties(feature['properties'])
-    return reactAngle
+    const feature_ = new PlotPolygon(json['coordinates'], json['options'])
+    feature_.setProperties(feature['properties'])
+    return feature_
   }
 }
 
-RectAngle.registerJSONType('RectAngle')
+PlotPolygon.registerJSONType('PlotPolygon')
 
-export default RectAngle
+export default PlotPolygon
