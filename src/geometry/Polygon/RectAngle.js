@@ -11,6 +11,7 @@ class RectAngle extends maptalks.Polygon {
     super(options)
     this.type = 'RectAngle'
     this._coordinates = []
+    this._points = [] // 控制点
     if (coordinates) {
       this.setPoints(coordinates)
     }
@@ -29,8 +30,8 @@ class RectAngle extends maptalks.Polygon {
    * @private
    */
   _generate () {
-    const count = this._coordinates.length
-    let _points = Coordinate.toNumberArrays(this._coordinates)
+    const count = this._points.length
+    let _points = Coordinate.toNumberArrays(this._points)
     if (count < 2) return
     if (count === 2) {
       let start = _points[0]
@@ -45,10 +46,18 @@ class RectAngle extends maptalks.Polygon {
   }
 
   setPoints (coordinates) {
-    this._coordinates = !coordinates ? [] : coordinates
-    if (this._coordinates.length >= 1) {
+    this._points = !coordinates ? [] : coordinates
+    if (this._points.length >= 1) {
       this._generate()
     }
+  }
+
+  /**
+   * 获取控制点
+   * @returns {Array|*}
+   */
+  getPoints () {
+    return this._points
   }
 
   _exportGeoJSONGeometry () {
