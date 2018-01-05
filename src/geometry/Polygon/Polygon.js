@@ -11,6 +11,7 @@ class PlotPolygon extends maptalks.Polygon {
     super(options)
     this.type = 'PlotPolygon'
     this._coordinates = []
+    this._points = []
     if (coordinates) {
       this.setPoints(coordinates)
     }
@@ -29,7 +30,7 @@ class PlotPolygon extends maptalks.Polygon {
    * @private
    */
   _generate () {
-    this.setCoordinates(this._coordinates)
+    this.setCoordinates(this._points)
   }
 
   getCoordinates () {
@@ -37,10 +38,18 @@ class PlotPolygon extends maptalks.Polygon {
   }
 
   setPoints (coordinates) {
-    this._coordinates = !coordinates ? [] : coordinates
-    if (this._coordinates.length >= 1) {
+    this._points = !coordinates ? [] : coordinates
+    if (this._points.length >= 1) {
       this._generate()
     }
+  }
+
+  /**
+   * 获取控制点
+   * @returns {Array|*}
+   */
+  getPoints () {
+    return this._points
   }
 
   _exportGeoJSONGeometry () {
