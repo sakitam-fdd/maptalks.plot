@@ -33,20 +33,26 @@ class RectAngle extends maptalks.Polygon {
     const count = this._points.length
     let _points = Coordinate.toNumberArrays(this._points)
     if (count < 2) return
-    if (count === 2) {
-      let start = _points[0]
-      let end = _points[1]
-      let coordinates = [start, [start[0], end[1]], end, [end[0], start[1]], start]
-      this.setCoordinates(Coordinate.toCoordinates(coordinates))
-    }
+    const start = _points[0]
+    const end = _points[_points.length - 1]
+    const coordinates = [start, [end[0], start[1]], end, [start[0], end[1]], start]
+    this.setCoordinates(Coordinate.toCoordinates(coordinates))
   }
 
+  /**
+   * 获取插值后点
+   * @returns {Array|*}
+   */
   getCoordinates () {
     return this._coordinates
   }
 
+  /**
+   * 更新控制点
+   * @param coordinates
+   */
   setPoints (coordinates) {
-    this._points = !coordinates ? [] : coordinates
+    this._points = coordinates || []
     if (this._points.length >= 1) {
       this._generate()
     }
@@ -81,6 +87,24 @@ class RectAngle extends maptalks.Polygon {
       'subType': 'RectAngle',
       'coordinates': coordinates
     }
+  }
+
+  /**
+   * 获取范围
+   * @param extents
+   * @private
+   */
+  static _getExtent (coords) {
+    const bbox = [ Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY,
+      Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY]
+    return coords.reduce(function (prev, coord) {
+      return [
+        Math.min(coord[0], prev[0]),
+        Math.min(coord[1], prev[1]),
+        Math.max(coord[0], prev[2]),
+        Math.max(coord[1], prev[3])
+      ]
+    }, bbox)
   }
 
   static fromJSON (json) {

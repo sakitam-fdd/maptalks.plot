@@ -33,10 +33,18 @@ class PlotPolygon extends maptalks.Polygon {
     this.setCoordinates(this._points)
   }
 
+  /**
+   * 获取插值后的数据
+   * @returns {Array}
+   */
   getCoordinates () {
     return this._coordinates
   }
 
+  /**
+   * 更新控制点
+   * @param coordinates
+   */
   setPoints (coordinates) {
     this._points = !coordinates ? [] : coordinates
     if (this._points.length >= 1) {
