@@ -10,13 +10,22 @@ import {
 } from '../helper/index'
 const Coordinate = maptalks.Coordinate
 class CurveFlag extends maptalks.Polygon {
-  constructor (coordinates, options = {}) {
+  constructor (coordinates, points, options = {}) {
     super(options)
     this.type = 'CurveFlag'
     this._coordinates = []
+    this._points = points || []
     if (coordinates) {
-      this.setPoints(coordinates)
+      this.setCoordinates(coordinates)
     }
+  }
+
+  /**
+   * 获取geom类型
+   * @returns {string}
+   */
+  getPlotType () {
+    return this.type
   }
 
   /**
@@ -24,8 +33,8 @@ class CurveFlag extends maptalks.Polygon {
    * @private
    */
   _generate () {
-    const count = this._coordinates.length
-    let _points = Coordinate.toNumberArrays(this._coordinates)
+    const count = this._points.length
+    let _points = Coordinate.toNumberArrays(this._points)
     if (count < 2) return
     this.setCoordinates([
       Coordinate.toCoordinates(CurveFlag.calculatePoints(_points))
@@ -33,12 +42,28 @@ class CurveFlag extends maptalks.Polygon {
   }
 
   /**
+   * 获取插值后的数据
+   * @returns {Array}
+   */
+  getCoordinates () {
+    return this._coordinates
+  }
+
+  /**
+   * 获取控制点
+   * @returns {Array|*}
+   */
+  getPoints () {
+    return this._points
+  }
+
+  /**
    * set point
    * @param coordinates
    */
   setPoints (coordinates) {
-    this._coordinates = !coordinates ? [] : coordinates
-    if (this._coordinates.length >= 1) {
+    this._points = !coordinates ? [] : coordinates
+    if (this._points.length >= 1) {
       this._generate()
     }
   }
@@ -52,9 +77,18 @@ class CurveFlag extends maptalks.Polygon {
   }
 
   _toJSON (options) {
+    const opts = maptalks.Util.extend({}, options)
+    const coordinates = this.getCoordinates()
+    opts.geometry = false
+    const feature = this.toGeoJSON(opts)
+    feature['geometry'] = {
+      'type': 'Polygon'
+    }
     return {
-      'feature': this.toGeoJSON(options),
-      'subType': 'CurveFlag'
+      'feature': feature,
+      'subType': 'CurveFlag',
+      'coordinates': coordinates,
+      'points': this.getPoints()
     }
   }
   /**
@@ -105,9 +139,9 @@ class CurveFlag extends maptalks.Polygon {
 
   static fromJSON (json) {
     const feature = json['feature']
-    const attackArrow = new CurveFlag(json['coordinates'], json['width'], json['height'], json['options'])
-    attackArrow.setProperties(feature['properties'])
-    return attackArrow
+    const curveFlag = new CurveFlag(json['coordinates'], json['points'], json['options'])
+    curveFlag.setProperties(feature['properties'])
+    return curveFlag
   }
 }
 

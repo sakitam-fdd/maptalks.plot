@@ -9,11 +9,19 @@ const Coordinate = maptalks.Coordinate
 class PlotCircle extends maptalks.Circle {
   constructor (coordinate, radius, options = {}) {
     super(null, options)
-    this.type = 'Circle'
+    this.type = 'PlotCircle'
     if (coordinate) {
       this.setCoordinates(coordinate)
     }
     this._radius = radius
+  }
+
+  /**
+   * 获取geom类型
+   * @returns {string}
+   */
+  getPlotType () {
+    return this.type
   }
 
   _exportGeoJSONGeometry () {

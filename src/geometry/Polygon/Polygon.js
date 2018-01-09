@@ -1,15 +1,15 @@
 /**
- * Created by FDD on 2017/12/26.
- * @desc 规则矩形
+ * Created by FDD on 2018/01/03.
+ * @desc 面
  * @Inherits maptalks.Polygon
  */
 import * as maptalks from 'maptalks'
 const Coordinate = maptalks.Coordinate
 
-class RectAngle extends maptalks.Polygon {
+class PlotPolygon extends maptalks.Polygon {
   constructor (coordinates, points, options = {}) {
     super(options)
-    this.type = 'RectAngle'
+    this.type = 'PlotPolygon'
     this._coordinates = []
     this._points = points || []
     if (coordinates) {
@@ -30,13 +30,15 @@ class RectAngle extends maptalks.Polygon {
    * @private
    */
   _generate () {
-    const count = this._points.length
-    let _points = Coordinate.toNumberArrays(this._points)
-    if (count < 2) return
-    const start = _points[0]
-    const end = _points[_points.length - 1]
-    const coordinates = [start, [end[0], start[1]], end, [start[0], end[1]], start]
-    this.setCoordinates(Coordinate.toCoordinates(coordinates))
+    this.setCoordinates(this._points)
+  }
+
+  /**
+   * 获取插值后的数据
+   * @returns {Array}
+   */
+  getCoordinates () {
+    return this._coordinates
   }
 
   /**
@@ -44,7 +46,7 @@ class RectAngle extends maptalks.Polygon {
    * @param coordinates
    */
   setPoints (coordinates) {
-    this._points = coordinates || []
+    this._points = !coordinates ? [] : coordinates
     if (this._points.length >= 1) {
       this._generate()
     }
@@ -76,38 +78,20 @@ class RectAngle extends maptalks.Polygon {
     }
     return {
       'feature': feature,
-      'subType': 'RectAngle',
+      'subType': 'PlotPolygon',
       'coordinates': coordinates,
       'points': this.getPoints()
     }
   }
 
-  /**
-   * 获取范围
-   * @param coords
-   * @private
-   */
-  static _getExtent (coords) {
-    const bbox = [ Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY,
-      Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY]
-    return coords.reduce(function (prev, coord) {
-      return [
-        Math.min(coord[0], prev[0]),
-        Math.min(coord[1], prev[1]),
-        Math.max(coord[0], prev[2]),
-        Math.max(coord[1], prev[3])
-      ]
-    }, bbox)
-  }
-
   static fromJSON (json) {
     const feature = json['feature']
-    const reactAngle = new RectAngle(json['coordinates'], json['points'], json['options'])
-    reactAngle.setProperties(feature['properties'])
-    return reactAngle
+    const feature_ = new PlotPolygon(json['coordinates'], json['points'], json['options'])
+    feature_.setProperties(feature['properties'])
+    return feature_
   }
 }
 
-RectAngle.registerJSONType('RectAngle')
+PlotPolygon.registerJSONType('PlotPolygon')
 
-export default RectAngle
+export default PlotPolygon

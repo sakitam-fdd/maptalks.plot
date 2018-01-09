@@ -6,13 +6,22 @@
 import * as maptalks from 'maptalks'
 const Coordinate = maptalks.Coordinate
 class FreePolygon extends maptalks.Polygon {
-  constructor (coordinates, options = {}) {
+  constructor (coordinates, points, options = {}) {
     super(options)
     this.type = 'FreePolygon'
     this._coordinates = []
+    this._points = points || []
     if (coordinates) {
-      this.setPoints(coordinates)
+      this.setCoordinates(coordinates)
     }
+  }
+
+  /**
+   * 获取geom类型
+   * @returns {string}
+   */
+  getPlotType () {
+    return this.type
   }
 
   /**
@@ -20,14 +29,22 @@ class FreePolygon extends maptalks.Polygon {
    * @private
    */
   _generate () {
-    this.setCoordinates([this._coordinates])
+    this.setCoordinates([this._points])
   }
 
   setPoints (coordinates) {
-    this._coordinates = !coordinates ? [] : coordinates
-    if (this._coordinates.length >= 1) {
+    this._points = coordinates || []
+    if (this._points.length >= 1) {
       this._generate()
     }
+  }
+
+  /**
+   * 获取控制点
+   * @returns {Array|*}
+   */
+  getPoints () {
+    return this._points
   }
 
   _exportGeoJSONGeometry () {
@@ -39,17 +56,26 @@ class FreePolygon extends maptalks.Polygon {
   }
 
   _toJSON (options) {
+    const opts = maptalks.Util.extend({}, options)
+    const coordinates = this.getCoordinates()
+    opts.geometry = false
+    const feature = this.toGeoJSON(opts)
+    feature['geometry'] = {
+      'type': 'Polygon'
+    }
     return {
-      'feature': this.toGeoJSON(options),
-      'subType': 'FreePolygon'
+      'feature': feature,
+      'subType': 'FreePolygon',
+      'coordinates': coordinates,
+      'points': this.getPoints()
     }
   }
 
   static fromJSON (json) {
     const feature = json['feature']
-    const attackArrow = new FreePolygon(json['coordinates'], json['width'], json['height'], json['options'])
-    attackArrow.setProperties(feature['properties'])
-    return attackArrow
+    const geometry = new FreePolygon(json['coordinates'], json['points'], json['options'])
+    geometry.setProperties(feature['properties'])
+    return geometry
   }
 }
 

@@ -19,6 +19,7 @@
 <body>
 <div id="map" class="container"></div>
 <script src="../node_modules/maptalks/dist/maptalks.js"></script>
+<!--<script src="https://cdn.jsdelivr.net/npm/maptalks/dist/maptalks.js"></script>-->
 <script src="../dist/maptalks.plot.js"></script>
 <script type="text/javascript">
   var map = new maptalks.Map('map', {
@@ -44,7 +45,7 @@
     layer.addGeometry(param.geometry);
   });
   var itemsLeft = ['Point', 'Polyline', 'Curve',
-    'Arc', 'FreeLine', 'AttackArrow',
+    'Arc', 'FreeLine',
     'ClosedCurve', 'FreePolygon',
     'GatheringPlace', 'Lune', 'Sector'].map(function (value) {
     return {

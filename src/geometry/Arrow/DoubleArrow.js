@@ -26,14 +26,15 @@ const _options = {
 }
 
 class DoubleArrow extends maptalks.Polygon {
-  constructor (coordinates, options = {}) {
+  constructor (coordinates, points, options = {}) {
     super(options)
     this.type = 'DoubleArrow'
     this._coordinates = []
     this.connetPoints = []
     this.symmetricalPoints = []
+    this._points = points || []
     if (coordinates) {
-      this.setPoints(coordinates)
+      this.setCoordinates(coordinates)
     }
   }
 
@@ -42,11 +43,11 @@ class DoubleArrow extends maptalks.Polygon {
    */
   _generate () {
     try {
-      const count = this._coordinates.length
-      const _points = Coordinate.toNumberArrays(this._coordinates)
+      const count = this._points.length
+      const _points = Coordinate.toNumberArrays(this._points)
       if (count < 2) return
       if (count === 2) {
-        this.setCoordinates([this._coordinates])
+        this.setCoordinates([this._points])
       } else {
         let [pnt1, pnt2, pnt3] = [_points[0], _points[1], _points[2]]
         if (count === 3) {
@@ -88,9 +89,29 @@ class DoubleArrow extends maptalks.Polygon {
     }
   }
 
+  /**
+   * 获取geom类型
+   * @returns {string}
+   */
+  getPlotType () {
+    return this.type
+  }
+
+  /**
+   * 获取控制点
+   * @returns {Array|*}
+   */
+  getPoints () {
+    return this._points
+  }
+
+  /**
+   * set point
+   * @param coordinates
+   */
   setPoints (coordinates) {
-    this._coordinates = !coordinates ? [] : coordinates
-    if (this._coordinates.length >= 1) {
+    this._points = !coordinates ? [] : coordinates
+    if (this._points.length >= 1) {
       this._generate()
     }
   }
@@ -105,12 +126,17 @@ class DoubleArrow extends maptalks.Polygon {
 
   _toJSON (options) {
     const opts = maptalks.Util.extend({}, options)
+    const coordinates = this.getCoordinates()
     opts.geometry = false
     const feature = this.toGeoJSON(opts)
+    feature['geometry'] = {
+      'type': 'Polygon'
+    }
     return {
       'feature': feature,
-      'coordinates': feature['coordinates'],
-      'subType': 'DoubleArrow'
+      'subType': 'DoubleArrow',
+      'coordinates': coordinates,
+      'points': this.getPoints()
     }
   }
 
@@ -236,7 +262,7 @@ class DoubleArrow extends maptalks.Polygon {
 
   static fromJSON (json) {
     const feature = json['feature']
-    const doubleArrow = new DoubleArrow(json['coordinates'], json['options'])
+    const doubleArrow = new DoubleArrow(json['coordinates'], json['points'], json['options'])
     doubleArrow.setProperties(feature['properties'])
     return doubleArrow
   }

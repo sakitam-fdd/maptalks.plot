@@ -14,21 +14,30 @@ const options = {
 }
 
 class Arc extends maptalks.LineString {
-  constructor (coordinates, options = {}) {
+  constructor (coordinates, points, options = {}) {
     super(options)
     this.type = 'Arc'
     this._coordinates = []
+    this._points = points || []
     if (coordinates) {
-      this.setPoints(coordinates)
+      this.setCoordinates(coordinates)
     }
   }
 
+  /**
+   * 获取geom类型
+   * @returns {string}
+   */
+  getPlotType () {
+    return this.type
+  }
+
   _generate () {
-    const _points = Coordinate.toNumberArrays(this._coordinates)
+    const _points = Coordinate.toNumberArrays(this._points)
     let count = _points.length
     if (count < 2) return
     if (count === 2) {
-      this.setCoordinates(this._coordinates)
+      this.setCoordinates(this._points)
     } else {
       let [
         pnt1, pnt2,
@@ -53,9 +62,21 @@ class Arc extends maptalks.LineString {
     }
   }
 
+  /**
+   * 获取控制点
+   * @returns {Array|*}
+   */
+  getPoints () {
+    return this._points
+  }
+
+  /**
+   * set point
+   * @param coordinates
+   */
   setPoints (coordinates) {
-    this._coordinates = !coordinates ? [] : coordinates
-    if (this._coordinates.length >= 1) {
+    this._points = !coordinates ? [] : coordinates
+    if (this._points.length >= 1) {
       this._generate()
     }
   }
@@ -71,9 +92,26 @@ class Arc extends maptalks.LineString {
   }
 
   _toJSON (options) {
-    return {
-      'feature': this.toGeoJSON(options)
+    const opts = maptalks.Util.extend({}, options)
+    const coordinates = this.getCoordinates()
+    opts.geometry = false
+    const feature = this.toGeoJSON(opts)
+    feature['geometry'] = {
+      'type': 'LineString'
     }
+    return {
+      'feature': feature,
+      'subType': 'Arc',
+      'coordinates': coordinates,
+      'points': this.getPoints()
+    }
+  }
+
+  static fromJSON (json) {
+    const feature = json['feature']
+    const _arc = new Arc(json['coordinates'], json['points'], json['options'])
+    _arc.setProperties(feature['properties'])
+    return _arc
   }
 }
 

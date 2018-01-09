@@ -9,12 +9,20 @@ import * as maptalks from 'maptalks'
 class PlotEllipse extends maptalks.Ellipse {
   constructor (coordinates, width, height, options = {}) {
     super(null, options)
-    this.type = 'Ellipse'
+    this.type = 'PlotEllipse'
     if (coordinates) {
       this.setCoordinates(coordinates)
     }
     this.width = width
     this.height = height
+  }
+
+  /**
+   * 获取geom类型
+   * @returns {string}
+   */
+  getPlotType () {
+    return this.type
   }
 
   _toJSON (options) {
