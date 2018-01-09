@@ -20,12 +20,13 @@ const _options = {
 }
 
 class StraightArrow extends maptalks.LineString {
-  constructor (coordinates, options = {}) {
+  constructor (coordinates, points, options = {}) {
     super(options)
     this.type = 'StraightArrow'
     this._coordinates = []
+    this._points = points || []
     if (coordinates) {
-      this.setPoints(coordinates)
+      this.setCoordinates(coordinates)
     }
   }
 
@@ -34,8 +35,8 @@ class StraightArrow extends maptalks.LineString {
    */
   _generate () {
     try {
-      const count = this._coordinates.length
-      const _points = Coordinate.toNumberArrays(this._coordinates)
+      const count = this._points.length
+      const _points = Coordinate.toNumberArrays(this._points)
       if (count < 2) return
       let [points1, points2] = [_points[0], _points[1]]
       let distance = MathDistance(points1, points2)
@@ -49,9 +50,29 @@ class StraightArrow extends maptalks.LineString {
     }
   }
 
+  /**
+   * 获取geom类型
+   * @returns {string}
+   */
+  getPlotType () {
+    return this.type
+  }
+
+  /**
+   * 获取控制点
+   * @returns {Array|*}
+   */
+  getPoints () {
+    return this._points
+  }
+
+  /**
+   * set point
+   * @param coordinates
+   */
   setPoints (coordinates) {
-    this._coordinates = !coordinates ? [] : coordinates
-    if (this._coordinates.length >= 1) {
+    this._points = !coordinates ? [] : coordinates
+    if (this._points.length >= 1) {
       this._generate()
     }
   }
@@ -66,9 +87,26 @@ class StraightArrow extends maptalks.LineString {
   }
 
   _toJSON (options) {
-    return {
-      'feature': this.toGeoJSON(options)
+    const opts = maptalks.Util.extend({}, options)
+    const coordinates = this.getCoordinates()
+    opts.geometry = false
+    const feature = this.toGeoJSON(opts)
+    feature['geometry'] = {
+      'type': 'LineString'
     }
+    return {
+      'feature': feature,
+      'subType': 'StraightArrow',
+      'coordinates': coordinates,
+      'points': this.getPoints()
+    }
+  }
+
+  static fromJSON (json) {
+    const feature = json['feature']
+    const _geometry = new StraightArrow(json['coordinates'], json['points'], json['options'])
+    _geometry.setProperties(feature['properties'])
+    return _geometry
   }
 }
 

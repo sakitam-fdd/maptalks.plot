@@ -17,7 +17,7 @@ import {
 const Coordinate = maptalks.Coordinate
 
 class TailedAttackArrow extends AttackArrow {
-  constructor (coordinates, options = {}) {
+  constructor (coordinates, points, options = {}) {
     super(coordinates, options)
     this.type = 'TailedAttackArrow'
     this._coordinates = []
@@ -29,8 +29,9 @@ class TailedAttackArrow extends AttackArrow {
     this.headTailFactor = 0.8
     this.swallowTailFactor = 1
     this.swallowTailPnt = null
+    this._points = points || []
     if (coordinates) {
-      this.setPoints(coordinates)
+      this.setCoordinates(coordinates)
     }
   }
 
@@ -39,12 +40,12 @@ class TailedAttackArrow extends AttackArrow {
    */
   _generate () {
     try {
-      const count = this._coordinates.length
+      const count = this._points.length
       if (count < 2) return
       if (count === 2) {
-        this.setCoordinates([this._coordinates])
+        this.setCoordinates([this._points])
       } else {
-        let _points = Coordinate.toNumberArrays(this._coordinates)
+        let _points = Coordinate.toNumberArrays(this._points)
         let [tailLeft, tailRight] = [_points[0], _points[1]]
         if (isClockWise(_points[0], _points[1], _points[2])) {
           tailLeft = _points[1]
@@ -76,18 +77,23 @@ class TailedAttackArrow extends AttackArrow {
 
   _toJSON (options) {
     const opts = maptalks.Util.extend({}, options)
+    const coordinates = this.getCoordinates()
     opts.geometry = false
     const feature = this.toGeoJSON(opts)
+    feature['geometry'] = {
+      'type': 'Polygon'
+    }
     return {
       'feature': feature,
-      'coordinates': feature['coordinates'],
-      'subType': 'TailedAttackArrow'
+      'subType': 'TailedAttackArrow',
+      'coordinates': coordinates,
+      'points': this.getPoints()
     }
   }
 
   static fromJSON (json) {
     const feature = json['feature']
-    const _geometry = new TailedAttackArrow(json['coordinates'], json['options'])
+    const _geometry = new TailedAttackArrow(json['coordinates'], json['points'], json['options'])
     _geometry.setProperties(feature['properties'])
     return _geometry
   }

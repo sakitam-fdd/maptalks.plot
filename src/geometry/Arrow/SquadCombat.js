@@ -15,8 +15,8 @@ import {
 const Coordinate = maptalks.Coordinate
 
 class SquadCombat extends AttackArrow {
-  constructor (coordinates, options = {}) {
-    super(coordinates, options)
+  constructor (coordinates, points, options = {}) {
+    super(coordinates, points, options)
     this.type = 'SquadCombat'
     this._coordinates = []
     this.headHeightFactor = 0.18
@@ -24,8 +24,9 @@ class SquadCombat extends AttackArrow {
     this.neckHeightFactor = 0.85
     this.neckWidthFactor = 0.15
     this.tailWidthFactor = 0.1
+    this._points = points || []
     if (coordinates) {
-      this.setPoints(coordinates)
+      this.setCoordinates(coordinates)
     }
   }
 
@@ -34,12 +35,12 @@ class SquadCombat extends AttackArrow {
    */
   _generate () {
     try {
-      const count = this._coordinates.length
+      const count = this._points.length
       if (count < 2) return
       if (count === 2) {
-        this.setCoordinates([this._coordinates])
+        this.setCoordinates([this._points])
       } else {
-        let _points = Coordinate.toNumberArrays(this._coordinates)
+        let _points = Coordinate.toNumberArrays(this._points)
         let tailPoints = this.getTailPoints(_points)
         let headPoints = this._getArrowHeadPoints(_points, tailPoints[0], tailPoints[1])
         let neckLeft = headPoints[0]
@@ -69,18 +70,23 @@ class SquadCombat extends AttackArrow {
 
   _toJSON (options) {
     const opts = maptalks.Util.extend({}, options)
+    const coordinates = this.getCoordinates()
     opts.geometry = false
     const feature = this.toGeoJSON(opts)
+    feature['geometry'] = {
+      'type': 'Polygon'
+    }
     return {
       'feature': feature,
-      'coordinates': feature['coordinates'],
-      'subType': 'SquadCombat'
+      'subType': 'SquadCombat',
+      'coordinates': coordinates,
+      'points': this.getPoints()
     }
   }
 
   static fromJSON (json) {
     const feature = json['feature']
-    const squadCombat = new SquadCombat(json['coordinates'], json['options'])
+    const squadCombat = new SquadCombat(json['coordinates'], json['points'], json['options'])
     squadCombat.setProperties(feature['properties'])
     return squadCombat
   }

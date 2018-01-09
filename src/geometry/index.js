@@ -33,7 +33,6 @@ import RectAngle from './Polygon/RectAngle'
 import GatheringPlace from './Polygon/GatheringPlace'
 
 import * as PlotTypes from '../core/PlotTypes'
-const Polygon = maptalks.Polygon
 const Coordinate = maptalks.Coordinate
 const RegisterModes = {}
 RegisterModes[PlotTypes.POINT] = {
@@ -49,6 +48,7 @@ RegisterModes[PlotTypes.POINT] = {
     return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.ARC] = {
   'freehand': false,
   'limitClickCount': 3,
@@ -63,6 +63,7 @@ RegisterModes[PlotTypes.ARC] = {
     return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.CURVE] = {
   'freehand': false,
   'action': ['click', 'mousemove', 'dblclick'],
@@ -76,6 +77,7 @@ RegisterModes[PlotTypes.CURVE] = {
     return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.POLYLINE] = {
   'freehand': false,
   'action': ['click', 'mousemove', 'dblclick'],
@@ -89,6 +91,7 @@ RegisterModes[PlotTypes.POLYLINE] = {
     return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.FREE_LINE] = {
   'freehand': true,
   'action': ['mousedown', 'drag', 'mouseup'],
@@ -115,6 +118,7 @@ RegisterModes[PlotTypes.ATTACK_ARROW] = {
     return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.DOUBLE_ARROW] = {
   'freehand': false,
   'limitClickCount': 4,
@@ -126,11 +130,10 @@ RegisterModes[PlotTypes.DOUBLE_ARROW] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.FINE_ARROW] = {
   'freehand': false,
   'limitClickCount': 2,
@@ -142,11 +145,10 @@ RegisterModes[PlotTypes.FINE_ARROW] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.ASSAULT_DIRECTION] = {
   'freehand': false,
   'limitClickCount': 2,
@@ -158,11 +160,10 @@ RegisterModes[PlotTypes.ASSAULT_DIRECTION] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
+// fixme error
 RegisterModes[PlotTypes.SQUAD_COMBAT] = {
   'freehand': false,
   'action': ['click', 'mousemove', 'dblclick'],
@@ -173,9 +174,7 @@ RegisterModes[PlotTypes.SQUAD_COMBAT] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
 RegisterModes[PlotTypes.TAILED_ATTACK_ARROW] = {
@@ -188,9 +187,7 @@ RegisterModes[PlotTypes.TAILED_ATTACK_ARROW] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
 RegisterModes[PlotTypes.TAILED_SQUAD_COMBAT] = {
@@ -204,11 +201,10 @@ RegisterModes[PlotTypes.TAILED_SQUAD_COMBAT] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.STRAIGHT_ARROW] = {
   'freehand': false,
   'limitClickCount': 2,
@@ -223,6 +219,7 @@ RegisterModes[PlotTypes.STRAIGHT_ARROW] = {
     return geometry
   }
 }
+// ok -2
 RegisterModes[PlotTypes.CLOSED_CURVE] = {
   'freehand': false,
   'action': ['click', 'mousemove', 'dblclick'],
@@ -233,11 +230,10 @@ RegisterModes[PlotTypes.CLOSED_CURVE] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.LUNE] = {
   'freehand': false,
   'limitClickCount': 3,
@@ -249,11 +245,10 @@ RegisterModes[PlotTypes.LUNE] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.SECTOR] = {
   'freehand': false,
   'limitClickCount': 3,
@@ -265,11 +260,10 @@ RegisterModes[PlotTypes.SECTOR] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.POLYGON] = {
   'freehand': false,
   'action': ['click', 'mousemove', 'dblclick'],
@@ -283,6 +277,7 @@ RegisterModes[PlotTypes.POLYGON] = {
     return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.RECTANGLE] = {
   'freehand': false,
   'limitClickCount': 2,
@@ -297,6 +292,7 @@ RegisterModes[PlotTypes.RECTANGLE] = {
     return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.FREE_POLYGON] = {
   'freehand': true,
   'action': ['mousedown', 'drag', 'mouseup'],
@@ -307,11 +303,10 @@ RegisterModes[PlotTypes.FREE_POLYGON] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.GATHERING_PLACE] = {
   'freehand': false,
   'limitClickCount': 3,
@@ -323,11 +318,10 @@ RegisterModes[PlotTypes.GATHERING_PLACE] = {
     geometry.setPoints(path)
   },
   'generate': function (geometry) {
-    return new Polygon(geometry.getCoordinates(), {
-      'symbol': geometry.getSymbol()
-    })
+    return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.CURVEFLAG] = {
   'freehand': false,
   'limitClickCount': 2,
@@ -342,6 +336,7 @@ RegisterModes[PlotTypes.CURVEFLAG] = {
     return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.RECTFLAG] = {
   'freehand': false,
   'limitClickCount': 2,
@@ -356,6 +351,7 @@ RegisterModes[PlotTypes.RECTFLAG] = {
     return geometry
   }
 }
+// ok
 RegisterModes[PlotTypes.TRIANGLEFLAG] = {
   'freehand': false,
   'limitClickCount': 2,

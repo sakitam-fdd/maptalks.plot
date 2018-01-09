@@ -13,13 +13,22 @@ import {
 const Coordinate = maptalks.Coordinate
 
 class Sector extends maptalks.Polygon {
-  constructor (coordinates, options = {}) {
+  constructor (coordinates, points, options = {}) {
     super(options)
     this.type = 'Sector'
     this._coordinates = []
+    this._points = points || []
     if (coordinates) {
-      this.setPoints(coordinates)
+      this.setCoordinates(coordinates)
     }
+  }
+
+  /**
+   * 获取geom类型
+   * @returns {string}
+   */
+  getPlotType () {
+    return this.type
   }
 
   /**
@@ -27,11 +36,11 @@ class Sector extends maptalks.Polygon {
    * @private
    */
   _generate () {
-    const count = this._coordinates.length
-    let _points = Coordinate.toNumberArrays(this._coordinates)
+    const count = this._points.length
+    let _points = Coordinate.toNumberArrays(this._points)
     if (count < 2) return
     if (count === 2) {
-      this.setCoordinates([this._coordinates])
+      this.setCoordinates([this._points])
     } else {
       let [center, pnt2, pnt3] = [_points[0], _points[1], _points[2]]
       let radius = MathDistance(pnt2, center)
@@ -45,11 +54,23 @@ class Sector extends maptalks.Polygon {
     }
   }
 
+  /**
+   * 更新控制点
+   * @param coordinates
+   */
   setPoints (coordinates) {
-    this._coordinates = !coordinates ? [] : coordinates
-    if (this._coordinates.length >= 1) {
+    this._points = coordinates || []
+    if (this._points.length >= 1) {
       this._generate()
     }
+  }
+
+  /**
+   * 获取控制点
+   * @returns {Array|*}
+   */
+  getPoints () {
+    return this._points
   }
 
   _exportGeoJSONGeometry () {
@@ -61,17 +82,26 @@ class Sector extends maptalks.Polygon {
   }
 
   _toJSON (options) {
+    const opts = maptalks.Util.extend({}, options)
+    const coordinates = this.getCoordinates()
+    opts.geometry = false
+    const feature = this.toGeoJSON(opts)
+    feature['geometry'] = {
+      'type': 'Polygon'
+    }
     return {
-      'feature': this.toGeoJSON(options),
-      'subType': 'Sector'
+      'feature': feature,
+      'subType': 'Sector',
+      'coordinates': coordinates,
+      'points': this.getPoints()
     }
   }
 
   static fromJSON (json) {
     const feature = json['feature']
-    const attackArrow = new Sector(json['coordinates'], json['width'], json['height'], json['options'])
-    attackArrow.setProperties(feature['properties'])
-    return attackArrow
+    const _geometry = new Sector(json['coordinates'], json['points'], json['options'])
+    _geometry.setProperties(feature['properties'])
+    return _geometry
   }
 }
 

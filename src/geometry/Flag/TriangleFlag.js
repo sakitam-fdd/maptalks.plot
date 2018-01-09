@@ -7,12 +7,13 @@
 import * as maptalks from 'maptalks'
 const Coordinate = maptalks.Coordinate
 class TriangleFlag extends maptalks.Polygon {
-  constructor (coordinates, options = {}) {
+  constructor (coordinates, points, options = {}) {
     super(options)
     this.type = 'TriangleFlag'
     this._coordinates = []
+    this._points = points || []
     if (coordinates) {
-      this.setPoints(coordinates)
+      this.setCoordinates(coordinates)
     }
   }
 
@@ -29,8 +30,8 @@ class TriangleFlag extends maptalks.Polygon {
    * @private
    */
   _generate () {
-    const count = this._coordinates.length
-    let _points = Coordinate.toNumberArrays(this._coordinates)
+    const count = this._points.length
+    let _points = Coordinate.toNumberArrays(this._points)
     if (count < 2) return
     this.setCoordinates([
       Coordinate.toCoordinates(TriangleFlag.calculatePoints(_points))
@@ -38,18 +39,30 @@ class TriangleFlag extends maptalks.Polygon {
   }
 
   /**
+   * 获取插值后的数据
+   * @returns {Array}
+   */
+  getCoordinates () {
+    return this._coordinates
+  }
+
+  /**
+   * 获取控制点
+   * @returns {Array|*}
+   */
+  getPoints () {
+    return this._points
+  }
+
+  /**
    * set point
    * @param coordinates
    */
   setPoints (coordinates) {
-    this._coordinates = !coordinates ? [] : coordinates
-    if (this._coordinates.length >= 1) {
+    this._points = coordinates || []
+    if (this._points.length >= 1) {
       this._generate()
     }
-  }
-
-  getCoordinates () {
-    return this._coordinates
   }
 
   _exportGeoJSONGeometry () {
@@ -71,7 +84,8 @@ class TriangleFlag extends maptalks.Polygon {
     return {
       'feature': feature,
       'subType': 'TriangleFlag',
-      'coordinates': coordinates
+      'coordinates': coordinates,
+      'points': this.getPoints()
     }
   }
   /**
@@ -97,7 +111,7 @@ class TriangleFlag extends maptalks.Polygon {
 
   static fromJSON (json) {
     const feature = json['feature']
-    const triangleFlag = new TriangleFlag(json['coordinates'], json['options'])
+    const triangleFlag = new TriangleFlag(json['coordinates'], json['points'], json['options'])
     triangleFlag.setProperties(feature['properties'])
     return triangleFlag
   }

@@ -21,12 +21,13 @@ const _options = {
 }
 
 class FineArrow extends maptalks.Polygon {
-  constructor (coordinates, options = {}) {
+  constructor (coordinates, points, options = {}) {
     super(options)
     this.type = 'FineArrow'
     this._coordinates = []
+    this._points = points || []
     if (coordinates) {
-      this.setPoints(coordinates)
+      this.setCoordinates(coordinates)
     }
   }
 
@@ -35,8 +36,8 @@ class FineArrow extends maptalks.Polygon {
    */
   _generate () {
     try {
-      const count = this._coordinates.length
-      const _points = Coordinate.toNumberArrays(this._coordinates)
+      const count = this._points.length
+      const _points = Coordinate.toNumberArrays(this._points)
       if (count < 2) return
       let [points1, points2] = [_points[0], _points[1]]
       let len = getBaseLength(_points)
@@ -58,9 +59,29 @@ class FineArrow extends maptalks.Polygon {
     }
   }
 
+  /**
+   * 获取geom类型
+   * @returns {string}
+   */
+  getPlotType () {
+    return this.type
+  }
+
+  /**
+   * 获取控制点
+   * @returns {Array|*}
+   */
+  getPoints () {
+    return this._points
+  }
+
+  /**
+   * set point
+   * @param coordinates
+   */
   setPoints (coordinates) {
-    this._coordinates = !coordinates ? [] : coordinates
-    if (this._coordinates.length >= 1) {
+    this._points = !coordinates ? [] : coordinates
+    if (this._points.length >= 1) {
       this._generate()
     }
   }
@@ -75,18 +96,23 @@ class FineArrow extends maptalks.Polygon {
 
   _toJSON (options) {
     const opts = maptalks.Util.extend({}, options)
+    const coordinates = this.getCoordinates()
     opts.geometry = false
     const feature = this.toGeoJSON(opts)
+    feature['geometry'] = {
+      'type': 'Polygon'
+    }
     return {
       'feature': feature,
-      'coordinates': feature['coordinates'],
-      'subType': 'FineArrow'
+      'subType': 'FineArrow',
+      'coordinates': coordinates,
+      'points': this.getPoints()
     }
   }
 
   static fromJSON (json) {
     const feature = json['feature']
-    const fineArrow = new FineArrow(json['coordinates'], json['options'])
+    const fineArrow = new FineArrow(json['coordinates'], json['points'], json['options'])
     fineArrow.setProperties(feature['properties'])
     return fineArrow
   }

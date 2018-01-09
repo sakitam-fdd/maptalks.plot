@@ -7,13 +7,13 @@ import * as maptalks from 'maptalks'
 const Coordinate = maptalks.Coordinate
 
 class PlotPolygon extends maptalks.Polygon {
-  constructor (coordinates, options = {}) {
+  constructor (coordinates, points, options = {}) {
     super(options)
     this.type = 'PlotPolygon'
     this._coordinates = []
-    this._points = []
+    this._points = points || []
     if (coordinates) {
-      this.setPoints(coordinates)
+      this.setCoordinates(coordinates)
     }
   }
 
@@ -79,13 +79,14 @@ class PlotPolygon extends maptalks.Polygon {
     return {
       'feature': feature,
       'subType': 'PlotPolygon',
-      'coordinates': coordinates
+      'coordinates': coordinates,
+      'points': this.getPoints()
     }
   }
 
   static fromJSON (json) {
     const feature = json['feature']
-    const feature_ = new PlotPolygon(json['coordinates'], json['options'])
+    const feature_ = new PlotPolygon(json['coordinates'], json['points'], json['options'])
     feature_.setProperties(feature['properties'])
     return feature_
   }

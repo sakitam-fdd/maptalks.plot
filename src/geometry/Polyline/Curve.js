@@ -12,47 +12,77 @@ const options = {
   'clipToPaint': true
 }
 class Curve extends maptalks.LineString {
-  constructor (coordinates, options = {}) {
+  constructor (coordinates, points, options = {}) {
     super(options)
     this.type = 'Curve'
     this._coordinates = []
+    this._points = points || []
     if (coordinates) {
-      this.setPoints(coordinates)
+      this.setCoordinates(coordinates)
     }
   }
 
   _generate () {
-    const _points = Coordinate.toNumberArrays(this._coordinates)
+    const _points = Coordinate.toNumberArrays(this._points)
     let count = _points.length
     if (count < 2) {
       return false
     } else if (count === 2) {
-      this.setCoordinates(this._coordinates)
+      this.setCoordinates(this._points)
     } else {
       let points = getCurvePoints(0.3, _points)
       this.setCoordinates(Coordinate.toCoordinates(points))
     }
   }
 
+  /**
+   * 获取geom类型
+   * @returns {string}
+   */
+  getPlotType () {
+    return this.type
+  }
+
+  /**
+   * 获取控制点
+   * @returns {Array|*}
+   */
+  getPoints () {
+    return this._points
+  }
+
+  /**
+   * set point
+   * @param coordinates
+   */
   setPoints (coordinates) {
-    this._coordinates = !coordinates ? [] : coordinates
-    if (this._coordinates.length >= 1) {
+    this._points = !coordinates ? [] : coordinates
+    if (this._points.length >= 1) {
       this._generate()
     }
   }
 
   _toJSON (options) {
+    const opts = maptalks.Util.extend({}, options)
+    const coordinates = this.getCoordinates()
+    opts.geometry = false
+    const feature = this.toGeoJSON(opts)
+    feature['geometry'] = {
+      'type': 'LineString'
+    }
     return {
-      'feature': this.toGeoJSON(options),
-      'subType': 'Curve'
+      'feature': feature,
+      'subType': 'Curve',
+      'coordinates': coordinates,
+      'points': this.getPoints()
     }
   }
 
   static fromJSON (json) {
     const feature = json['feature']
-    const arc = new Curve(feature['geometry']['coordinates'], json['options'])
-    arc.setProperties(feature['properties'])
-    return arc
+    const _geometry = new Curve(json['coordinates'], json['points'], json['options'])
+    _geometry.setProperties(feature['properties'])
+    return _geometry
   }
 }
 Curve.registerJSONType('Curve')

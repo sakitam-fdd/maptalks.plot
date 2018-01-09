@@ -7,13 +7,13 @@ import * as maptalks from 'maptalks'
 const Coordinate = maptalks.Coordinate
 
 class RectAngle extends maptalks.Polygon {
-  constructor (coordinates, options = {}) {
+  constructor (coordinates, points, options = {}) {
     super(options)
     this.type = 'RectAngle'
     this._coordinates = []
-    this._points = [] // 控制点
+    this._points = points || []
     if (coordinates) {
-      this.setPoints(coordinates)
+      this.setCoordinates(coordinates)
     }
   }
 
@@ -37,14 +37,6 @@ class RectAngle extends maptalks.Polygon {
     const end = _points[_points.length - 1]
     const coordinates = [start, [end[0], start[1]], end, [start[0], end[1]], start]
     this.setCoordinates(Coordinate.toCoordinates(coordinates))
-  }
-
-  /**
-   * 获取插值后点
-   * @returns {Array|*}
-   */
-  getCoordinates () {
-    return this._coordinates
   }
 
   /**
@@ -85,13 +77,14 @@ class RectAngle extends maptalks.Polygon {
     return {
       'feature': feature,
       'subType': 'RectAngle',
-      'coordinates': coordinates
+      'coordinates': coordinates,
+      'points': this.getPoints()
     }
   }
 
   /**
    * 获取范围
-   * @param extents
+   * @param coords
    * @private
    */
   static _getExtent (coords) {
@@ -109,7 +102,7 @@ class RectAngle extends maptalks.Polygon {
 
   static fromJSON (json) {
     const feature = json['feature']
-    const reactAngle = new RectAngle(json['coordinates'], json['options'])
+    const reactAngle = new RectAngle(json['coordinates'], json['points'], json['options'])
     reactAngle.setProperties(feature['properties'])
     return reactAngle
   }

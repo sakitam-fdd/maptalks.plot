@@ -15,7 +15,7 @@ import {
 const Coordinate = maptalks.Coordinate
 
 class TailedSquadCombat extends AttackArrow {
-  constructor (coordinates, options = {}) {
+  constructor (coordinates, points, options = {}) {
     super(coordinates, options)
     this.type = 'TailedSquadCombat'
     this._coordinates = []
@@ -26,8 +26,9 @@ class TailedSquadCombat extends AttackArrow {
     this.tailWidthFactor = 0.1
     this.swallowTailFactor = 1
     this.swallowTailPnt = null
+    this._points = points || []
     if (coordinates) {
-      this.setPoints(coordinates)
+      this.setCoordinates(coordinates)
     }
   }
 
@@ -36,8 +37,8 @@ class TailedSquadCombat extends AttackArrow {
    */
   _generate () {
     try {
-      const count = this._coordinates.length
-      const _points = Coordinate.toNumberArrays(this._coordinates)
+      const count = this._points.length
+      const _points = Coordinate.toNumberArrays(this._points)
       if (count < 2) return
       let tailPoints = this.getTailPoints(_points)
       let headPoints = this._getArrowHeadPoints(_points, tailPoints[0], tailPoints[2])
@@ -69,18 +70,23 @@ class TailedSquadCombat extends AttackArrow {
 
   _toJSON (options) {
     const opts = maptalks.Util.extend({}, options)
+    const coordinates = this.getCoordinates()
     opts.geometry = false
     const feature = this.toGeoJSON(opts)
+    feature['geometry'] = {
+      'type': 'Polygon'
+    }
     return {
       'feature': feature,
-      'coordinates': feature['coordinates'],
-      'subType': 'TailedSquadCombat'
+      'subType': 'TailedSquadCombat',
+      'coordinates': coordinates,
+      'points': this.getPoints()
     }
   }
 
   static fromJSON (json) {
     const feature = json['feature']
-    const _geometry = new TailedSquadCombat(json['coordinates'], json['options'])
+    const _geometry = new TailedSquadCombat(json['coordinates'], json['points'], json['options'])
     _geometry.setProperties(feature['properties'])
     return _geometry
   }
