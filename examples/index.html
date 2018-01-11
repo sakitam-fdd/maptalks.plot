@@ -25,13 +25,14 @@
   var map = new maptalks.Map('map', {
     center: [108.93, 34.27],
     zoom: 5,
-    projection: 'EPSG:4326',
     baseLayer: new maptalks.TileLayer('base', {
       urlTemplate: 'https://webst01.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}'
     })
   });
 
-  var layer = new maptalks.VectorLayer('vector').addTo(map);
+  var layer = new maptalks.VectorLayer('vector', {
+    enableSimplify : false
+  }).addTo(map);
 
   var drawTool = new MaptalksPlot.PlotDraw({
     mode: 'Curve'

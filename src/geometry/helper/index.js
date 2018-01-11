@@ -169,6 +169,7 @@ export const getCubicValue = (t, startPnt, cPnt1, cPnt2, endPnt) => {
 
 /**
  * 根据起止点和旋转方向求取第三个点
+ * @param measurer
  * @param startPnt
  * @param endPnt
  * @param angle
@@ -176,30 +177,40 @@ export const getCubicValue = (t, startPnt, cPnt1, cPnt2, endPnt) => {
  * @param clockWise
  * @returns {[*,*]}
  */
-export const getThirdPoint = (startPnt, endPnt, angle, distance, clockWise) => {
+export const getThirdPoint = (measurer, startPnt, endPnt, angle, distance, clockWise) => {
   let azimuth = getAzimuth(startPnt, endPnt)
   let alpha = clockWise ? (azimuth + angle) : (azimuth - angle)
   let dx = distance * Math.cos(alpha)
   let dy = distance * Math.sin(alpha)
-  return ([endPnt[0] + dx, endPnt[1] + dy])
+  const vertex = measurer.locate({
+    'x': endPnt[0],
+    'y': endPnt[1]
+  }, dx, dy)
+  return [vertex['x'], vertex['y']]
 }
 
 /**
  * 插值弓形线段点
+ * @param measurer
  * @param center
  * @param radius
  * @param startAngle
  * @param endAngle
+ * @param numberOfPoints
  * @returns {null}
  */
-export const getArcPoints = (center, radius, startAngle, endAngle) => {
-  let [x, y, points, angleDiff] = [null, null, [], (endAngle - startAngle)]
+export const getArcPoints = (measurer, center, radius, startAngle, endAngle, numberOfPoints = 100) => {
+  let [dx, dy, points, angleDiff] = [null, null, [], (endAngle - startAngle)]
   angleDiff = ((angleDiff < 0) ? (angleDiff + (Math.PI * 2)) : angleDiff)
-  for (let i = 0; i < 200; i++) {
-    const angle = startAngle + angleDiff * i / 200
-    x = center[0] + radius * Math.cos(angle)
-    y = center[1] + radius * Math.sin(angle)
-    points.push([x, y])
+  for (let i = 0; i < numberOfPoints; i++) {
+    const rad = angleDiff * i / numberOfPoints + startAngle
+    dx = radius * Math.cos(rad)
+    dy = radius * Math.sin(rad)
+    const vertex = measurer.locate({
+      'x': center[0],
+      'y': center[1]
+    }, dx, dy)
+    points.push([vertex['x'], vertex['y']])
   }
   return points
 }

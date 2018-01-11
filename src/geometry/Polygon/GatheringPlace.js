@@ -9,7 +9,6 @@ import * as Constants from '../../Constants'
 import {
   Mid,
   getThirdPoint,
-  MathDistance,
   getBisectorNormals,
   getCubicValue
 } from '../helper/index'
@@ -44,8 +43,9 @@ class GatheringPlace extends maptalks.Polygon {
     if (count < 2) return
     if (count === 2) {
       let mid = Mid(_points[0], _points[1])
-      let d = MathDistance(_points[0], mid) / 0.9
-      let pnt = getThirdPoint(_points[0], mid, Constants.HALF_PI, d, true)
+      const measurer = this._getMeasurer()
+      const distance = measurer.measureLength(Coordinate.toCoordinates(_points[0]), Coordinate.toCoordinates(mid)) / 0.9
+      let pnt = getThirdPoint(measurer, _points[0], mid, Constants.HALF_PI, distance, true)
       _points = [_points[0], pnt, _points[1]]
     }
     let mid = Mid(_points[0], _points[2])

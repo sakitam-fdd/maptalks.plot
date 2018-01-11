@@ -8,7 +8,6 @@ import * as Constants from '../../Constants'
 import {
   Mid,
   getThirdPoint,
-  MathDistance,
   isClockWise,
   getAzimuth,
   getArcPoints,
@@ -42,15 +41,18 @@ class Lune extends maptalks.Polygon {
     const count = this._points.length
     let _points = Coordinate.toNumberArrays(this._points)
     if (count < 2) return
+    const measurer = this._getMeasurer()
     if (count === 2) {
       let mid = Mid(_points[0], _points[1])
-      let d = MathDistance(_points[0], mid)
-      let pnt = getThirdPoint(_points[0], mid, Constants.HALF_PI, d)
+      let pnt = getThirdPoint(
+        measurer, _points[0], mid, Constants.HALF_PI,
+        measurer.measureLength(Coordinate.toCoordinates(_points[0]), Coordinate.toCoordinates(mid))
+      )
       _points.push(pnt)
     }
     let [pnt1, pnt2, pnt3, startAngle, endAngle] = [_points[0], _points[1], _points[2], undefined, undefined]
     let center = getCircleCenterOfThreePoints(pnt1, pnt2, pnt3)
-    let radius = MathDistance(pnt1, center)
+    let radius = measurer.measureLength(Coordinate.toCoordinates(pnt1), Coordinate.toCoordinates(center))
     let angle1 = getAzimuth(pnt1, center)
     let angle2 = getAzimuth(pnt2, center)
     if (isClockWise(pnt1, pnt2, pnt3)) {
@@ -60,7 +62,7 @@ class Lune extends maptalks.Polygon {
       startAngle = angle1
       endAngle = angle2
     }
-    _points = getArcPoints(center, radius, startAngle, endAngle)
+    _points = getArcPoints(measurer, center, radius, startAngle, endAngle)
     _points.push(_points[0])
     this.setCoordinates([
       Coordinate.toCoordinates(_points)
