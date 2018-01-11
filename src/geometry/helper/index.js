@@ -193,15 +193,15 @@ export const getThirdPoint = (startPnt, endPnt, angle, distance, clockWise) => {
  * @returns {null}
  */
 export const getArcPoints = (center, radius, startAngle, endAngle) => {
-  let [x, y, pnts, angleDiff] = [null, null, [], (endAngle - startAngle)]
+  let [x, y, points, angleDiff] = [null, null, [], (endAngle - startAngle)]
   angleDiff = ((angleDiff < 0) ? (angleDiff + (Math.PI * 2)) : angleDiff)
-  for (let i = 0; i < 100; i++) {
-    let angle = startAngle + angleDiff * i / 100
+  for (let i = 0; i < 200; i++) {
+    const angle = startAngle + angleDiff * i / 200
     x = center[0] + radius * Math.cos(angle)
     y = center[1] + radius * Math.sin(angle)
-    pnts.push([x, y])
+    points.push([x, y])
   }
-  return pnts
+  return points
 }
 
 /**
