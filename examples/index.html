@@ -23,15 +23,11 @@
 <script src="../dist/maptalks.plot.js"></script>
 <script type="text/javascript">
   var map = new maptalks.Map('map', {
-    center: [-0.113049, 51.498568],
-    zoom: 14,
+    center: [108.93, 34.27],
+    zoom: 5,
     projection: 'EPSG:4326',
-    attribution: {
-      content: '&copy; <a href="http://osm.org">OpenStreetMap</a> contributors, &copy; <a href="https://carto.com/">CARTO</a>'
-    },
     baseLayer: new maptalks.TileLayer('base', {
-      urlTemplate: 'http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
-      subdomains: ['a', 'b', 'c', 'd']
+      urlTemplate: 'https://webst01.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}'
     })
   });
 

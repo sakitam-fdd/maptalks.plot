@@ -81,7 +81,7 @@ class AttackArrow extends maptalks.Polygon {
    */
   _getArrowHeadPoints (points, tailLeft, tailRight) {
     let len = getBaseLength(points)
-    let headHeight = len * this.headHeightFactor
+    let headHeight = len * 0.18
     let headPnt = points[points.length - 1]
     len = MathDistance(headPnt, points[points.length - 2])
     let tailWidth = MathDistance(tailLeft, tailRight)

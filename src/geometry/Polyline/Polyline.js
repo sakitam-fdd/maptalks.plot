@@ -5,8 +5,6 @@
  */
 
 import * as maptalks from 'maptalks'
-import Curve from "./Curve";
-import {getCurvePoints} from "../helper";
 const Coordinate = maptalks.Coordinate
 const options = {
   'arrowStyle': null,

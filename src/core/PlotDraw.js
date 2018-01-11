@@ -7,7 +7,6 @@ import * as maptalks from 'maptalks'
 import {BASE_LAYERNAME} from '../Constants'
 import RegisterModes from '../geometry'
 import {merge} from '../utils/utils'
-import {MathDistance} from '../geometry/helper'
 
 const _options = {
   'symbol': {
@@ -196,10 +195,7 @@ class PlotDraw extends maptalks.MapTool {
         return
       }
       if (!registerMode.freehand && registerMode['limitClickCount'] > 1) {
-        if (MathDistance([
-          coordinate['x'], coordinate['y']], [
-          this._clickCoords[this._clickCoords.length - 1]['x'],
-          this._clickCoords[this._clickCoords.length - 1]['y']]) < 0.0001) {
+        if (this.getMap().computeLength(coordinate, this._clickCoords[this._clickCoords.length - 1]) < 0.01) {
           return
         }
       }
@@ -251,10 +247,7 @@ class PlotDraw extends maptalks.MapTool {
     if (!this._geometry || !map || map.isInteracting()) {
       return
     }
-    if (MathDistance([
-      coordinate['x'], coordinate['y']], [
-      this._clickCoords[this._clickCoords.length - 1]['x'],
-      this._clickCoords[this._clickCoords.length - 1]['y']]) < 0.0001) {
+    if (map.computeLength(coordinate, this._clickCoords[this._clickCoords.length - 1]) < 0.01) {
       return
     }
     const containerPoint = this._getMouseContainerPoint(event)

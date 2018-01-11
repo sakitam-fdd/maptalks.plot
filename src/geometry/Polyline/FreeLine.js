@@ -4,7 +4,6 @@
  * @Inherits maptalks.LineString
  */
 import * as maptalks from 'maptalks'
-import Polyline from "./Polyline";
 const Coordinate = maptalks.Coordinate
 const options = {
   'arrowStyle': null,
