@@ -39,6 +39,16 @@
   }).addTo(map).disable();
   drawTool.on('drawend', function (param) {
     console.log(param.geometry);
+    if (param.geometry.getPlotType() === 'PlotPoint') {
+      param.geometry.setSymbol({
+        'markerFile': './static/images/5.png',
+        'markerWidth': 28,
+        'markerHeight': 40,
+        'markerDx': 0,
+        'markerDy': 0,
+        'markerOpacity': 1
+      })
+    }
     layer.addGeometry(param.geometry);
   });
   var itemsLeft = ['Point', 'Polyline', 'Curve',

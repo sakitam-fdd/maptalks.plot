@@ -6,12 +6,8 @@
 
 import * as maptalks from 'maptalks'
 import * as Constants from '../../Constants'
-import {
-  Mid,
-  getThirdPoint,
-  getBisectorNormals,
-  getCubicValue
-} from '../helper/index'
+import {getMiddlePoint, mathBaseDistance} from '../helper/common'
+import {getThirdPoint, getBisectorNormals, getCubicValue} from '../helper/index'
 const Coordinate = maptalks.Coordinate
 class GatheringPlace extends maptalks.Polygon {
   constructor (coordinates, points, options = {}) {
@@ -42,13 +38,12 @@ class GatheringPlace extends maptalks.Polygon {
     let _points = Coordinate.toNumberArrays(this._points)
     if (count < 2) return
     if (count === 2) {
-      let mid = Mid(_points[0], _points[1])
-      const measurer = this._getMeasurer()
-      const distance = measurer.measureLength(Coordinate.toCoordinates(_points[0]), Coordinate.toCoordinates(mid)) / 0.9
-      let pnt = getThirdPoint(measurer, _points[0], mid, Constants.HALF_PI, distance, true)
+      let mid = getMiddlePoint(_points[0], _points[1])
+      const distance = mathBaseDistance(_points[0], mid) / 0.9
+      let pnt = getThirdPoint(_points[0], mid, Constants.HALF_PI, distance, true)
       _points = [_points[0], pnt, _points[1]]
     }
-    let mid = Mid(_points[0], _points[2])
+    let mid = getMiddlePoint(_points[0], _points[2])
     _points.push(mid, _points[0], _points[1])
     let [normals, pnt1, pnt2, pnt3, pList] = [[], undefined, undefined, undefined, []]
     for (let i = 0; i < _points.length - 2; i++) {

@@ -6,15 +6,11 @@
 
 import * as maptalks from 'maptalks'
 import * as Constants from '../../Constants'
+import {getMiddlePoint, mathBaseDistance} from '../helper/common'
 import {
-  Mid,
-  getThirdPoint,
-  MathDistance,
-  getBaseLength,
-  wholeDistance,
-  isClockWise,
-  getQBSplinePoints,
-  getAngleOfThreePoints
+  getThirdPoint, isClockWise,
+  getBaseLength, wholeDistance,
+  getQBSplinePoints, getAngleOfThreePoints
 } from '../helper/index'
 const Coordinate = maptalks.Coordinate
 // FIXME error
@@ -39,6 +35,7 @@ class AttackArrow extends maptalks.Polygon {
    */
   _generate () {
     try {
+      const measurer = this._getMeasurer()
       const count = this._points.length
       if (count < 2) return
       if (count === 2) {
@@ -50,12 +47,12 @@ class AttackArrow extends maptalks.Polygon {
           tailLeft = _points[1]
           tailRight = _points[0]
         }
-        let midTail = Mid(tailLeft, tailRight)
+        let midTail = getMiddlePoint(tailLeft, tailRight)
         let bonePoints = [midTail].concat(_points.slice(2))
         let headPoints = this._getArrowHeadPoints(bonePoints, tailLeft, tailRight)
         let [neckLeft, neckRight] = [headPoints[0], headPoints[4]]
-        let tailWidthFactor = MathDistance(tailLeft, tailRight) / getBaseLength(bonePoints)
-        let bodyPoints = AttackArrow._getArrowBodyPoints(bonePoints, neckLeft, neckRight, tailWidthFactor)
+        let tailWidthFactor = mathBaseDistance(tailLeft, tailRight) / getBaseLength(bonePoints)
+        let bodyPoints = AttackArrow._getArrowBodyPoints(measurer, bonePoints, neckLeft, neckRight, tailWidthFactor)
         let count = bodyPoints.length
         let leftPoints = [tailLeft].concat(bodyPoints.slice(0, count / 2))
         leftPoints.push(neckLeft)
@@ -83,8 +80,8 @@ class AttackArrow extends maptalks.Polygon {
     let len = getBaseLength(points)
     let headHeight = len * 0.18
     let headPnt = points[points.length - 1]
-    len = MathDistance(headPnt, points[points.length - 2])
-    let tailWidth = MathDistance(tailLeft, tailRight)
+    len = (headPnt, points[points.length - 2])
+    let tailWidth = mathBaseDistance(tailLeft, tailRight)
     if (headHeight > tailWidth * this.headTailFactor) {
       headHeight = tailWidth * this.headTailFactor
     }
@@ -154,22 +151,23 @@ class AttackArrow extends maptalks.Polygon {
 
   /**
    * 插值面部分数据
+   * @param measurer
    * @param points
    * @param neckLeft
    * @param neckRight
    * @param tailWidthFactor
    * @returns {*|T[]|string}
    */
-  static _getArrowBodyPoints (points, neckLeft, neckRight, tailWidthFactor) {
+  static _getArrowBodyPoints (measurer, points, neckLeft, neckRight, tailWidthFactor) {
     let allLen = wholeDistance(points)
     let len = getBaseLength(points)
     let tailWidth = len * tailWidthFactor
-    let neckWidth = MathDistance(neckLeft, neckRight)
+    let neckWidth = mathBaseDistance(neckLeft, neckRight)
     let widthDif = (tailWidth - neckWidth) / 2
     let [tempLen, leftBodyPoints, rightBodyPoints] = [0, [], []]
     for (let i = 1; i < points.length - 1; i++) {
       let angle = getAngleOfThreePoints(points[i - 1], points[i], points[i + 1]) / 2
-      tempLen += MathDistance(points[i - 1], points[i])
+      tempLen += mathBaseDistance(points[i - 1], points[i])
       let w = (tailWidth / 2 - tempLen / allLen * widthDif) / Math.sin(angle)
       let left = getThirdPoint(points[i - 1], points[i], Math.PI - angle, w, true)
       let right = getThirdPoint(points[i - 1], points[i], angle, w, false)
