@@ -135,19 +135,6 @@ export const isClockWise = (pnt1, pnt2, pnt3) => {
 }
 
 /**
- * 获取线上的点
- * @param t
- * @param startPnt
- * @param endPnt
- * @returns {[*,*]}
- */
-export const getPointOnLine = (t, startPnt, endPnt) => {
-  let x = startPnt[0] + (t * (endPnt[0] - startPnt[0]))
-  let y = startPnt[1] + (t * (endPnt[1] - startPnt[1]))
-  return [x, y]
-}
-
-/**
  * 获取立方值
  * @param t
  * @param startPnt

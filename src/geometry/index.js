@@ -3,7 +3,7 @@
  * @desc 标绘图形构造类
  */
 import * as maptalks from 'maptalks'
-
+import PlotPoint from './Point/Point'
 import Arc from './Polyline/Arc'
 import Curve from './Polyline/Curve'
 import Polyline from './Polyline/Polyline'
@@ -40,15 +40,15 @@ RegisterModes[PlotTypes.POINT] = {
   'limitClickCount': 1,
   'action': ['click'],
   'create': function (path) {
-    return new maptalks.Marker(path[0])
+    return new PlotPoint(path[0])
   },
   'update': function (path, geometry) {
+    geometry.setPoints(path)
   },
   'generate': function (geometry) {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.ARC] = {
   'freehand': false,
   'limitClickCount': 3,
@@ -63,7 +63,6 @@ RegisterModes[PlotTypes.ARC] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.CURVE] = {
   'freehand': false,
   'action': ['click', 'mousemove', 'dblclick'],
@@ -77,7 +76,6 @@ RegisterModes[PlotTypes.CURVE] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.POLYLINE] = {
   'freehand': false,
   'action': ['click', 'mousemove', 'dblclick'],
@@ -91,7 +89,6 @@ RegisterModes[PlotTypes.POLYLINE] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.FREE_LINE] = {
   'freehand': true,
   'action': ['mousedown', 'drag', 'mouseup'],
@@ -118,7 +115,6 @@ RegisterModes[PlotTypes.ATTACK_ARROW] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.DOUBLE_ARROW] = {
   'freehand': false,
   'limitClickCount': 4,
@@ -133,7 +129,6 @@ RegisterModes[PlotTypes.DOUBLE_ARROW] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.FINE_ARROW] = {
   'freehand': false,
   'limitClickCount': 2,
@@ -148,7 +143,6 @@ RegisterModes[PlotTypes.FINE_ARROW] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.ASSAULT_DIRECTION] = {
   'freehand': false,
   'limitClickCount': 2,
@@ -163,7 +157,6 @@ RegisterModes[PlotTypes.ASSAULT_DIRECTION] = {
     return geometry
   }
 }
-// fixme error
 RegisterModes[PlotTypes.SQUAD_COMBAT] = {
   'freehand': false,
   'action': ['click', 'mousemove', 'dblclick'],
@@ -204,7 +197,6 @@ RegisterModes[PlotTypes.TAILED_SQUAD_COMBAT] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.STRAIGHT_ARROW] = {
   'freehand': false,
   'limitClickCount': 2,
@@ -219,7 +211,6 @@ RegisterModes[PlotTypes.STRAIGHT_ARROW] = {
     return geometry
   }
 }
-// ok -2
 RegisterModes[PlotTypes.CLOSED_CURVE] = {
   'freehand': false,
   'action': ['click', 'mousemove', 'dblclick'],
@@ -233,7 +224,6 @@ RegisterModes[PlotTypes.CLOSED_CURVE] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.LUNE] = {
   'freehand': false,
   'limitClickCount': 3,
@@ -248,7 +238,6 @@ RegisterModes[PlotTypes.LUNE] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.SECTOR] = {
   'freehand': false,
   'limitClickCount': 3,
@@ -263,7 +252,6 @@ RegisterModes[PlotTypes.SECTOR] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.POLYGON] = {
   'freehand': false,
   'action': ['click', 'mousemove', 'dblclick'],
@@ -277,7 +265,6 @@ RegisterModes[PlotTypes.POLYGON] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.RECTANGLE] = {
   'freehand': false,
   'limitClickCount': 2,
@@ -292,7 +279,6 @@ RegisterModes[PlotTypes.RECTANGLE] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.FREE_POLYGON] = {
   'freehand': true,
   'action': ['mousedown', 'drag', 'mouseup'],
@@ -306,7 +292,6 @@ RegisterModes[PlotTypes.FREE_POLYGON] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.GATHERING_PLACE] = {
   'freehand': false,
   'limitClickCount': 3,
@@ -321,7 +306,6 @@ RegisterModes[PlotTypes.GATHERING_PLACE] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.CURVEFLAG] = {
   'freehand': false,
   'limitClickCount': 2,
@@ -336,7 +320,6 @@ RegisterModes[PlotTypes.CURVEFLAG] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.RECTFLAG] = {
   'freehand': false,
   'limitClickCount': 2,
@@ -351,7 +334,6 @@ RegisterModes[PlotTypes.RECTFLAG] = {
     return geometry
   }
 }
-// ok
 RegisterModes[PlotTypes.TRIANGLEFLAG] = {
   'freehand': false,
   'limitClickCount': 2,
@@ -366,7 +348,6 @@ RegisterModes[PlotTypes.TRIANGLEFLAG] = {
     return geometry
   }
 }
-// 圆
 RegisterModes[PlotTypes.CIRCLE] = {
   'freehand': true,
   'action': ['mousedown', 'drag', 'mouseup'],
@@ -382,7 +363,6 @@ RegisterModes[PlotTypes.CIRCLE] = {
     return geometry
   }
 }
-// 椭圆
 RegisterModes[PlotTypes.ELLIPSE] = {
   'freehand': true,
   'action': ['mousedown', 'drag', 'mouseup'],

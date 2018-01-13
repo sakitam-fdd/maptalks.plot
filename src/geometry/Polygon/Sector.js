@@ -5,11 +5,8 @@
  */
 
 import * as maptalks from 'maptalks'
-import {
-  MathDistance,
-  getAzimuth,
-  getArcPoints
-} from '../helper/index'
+import { getArcPoints, mathDistance } from '../helper/common'
+import { getAzimuth } from '../helper/index'
 const Coordinate = maptalks.Coordinate
 
 class Sector extends maptalks.Polygon {
@@ -43,10 +40,11 @@ class Sector extends maptalks.Polygon {
       this.setCoordinates([this._points])
     } else {
       let [center, pnt2, pnt3] = [_points[0], _points[1], _points[2]]
-      let radius = MathDistance(pnt2, center)
+      const measurer = this._getMeasurer()
+      const radius = mathDistance(measurer, pnt2, center)
       let startAngle = getAzimuth(pnt2, center)
       let endAngle = getAzimuth(pnt3, center)
-      let pList = getArcPoints(center, radius, startAngle, endAngle)
+      let pList = getArcPoints(measurer, center, radius, startAngle, endAngle)
       pList.push(center, pList[0])
       this.setCoordinates([
         Coordinate.toCoordinates(pList)

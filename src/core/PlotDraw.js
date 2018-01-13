@@ -186,18 +186,14 @@ class PlotDraw extends maptalks.MapTool {
    * @private
    */
   _firstClickHandler (event) {
-    this._createGeometry(event)
     const registerMode = this._getRegisterMode()
     const coordinate = event['coordinate']
-    if (this._geometry) {
-      if (this.getMode() === 'point') {
-        this.endDraw(event)
+    if (!this._geometry) {
+      this._createGeometry(event)
+    } else {
+      if (this._clickCoords.length > 0 &&
+        this.getMap().computeLength(coordinate, this._clickCoords[this._clickCoords.length - 1]) < 0.01) {
         return
-      }
-      if (!registerMode.freehand && registerMode['limitClickCount'] > 1) {
-        if (this.getMap().computeLength(coordinate, this._clickCoords[this._clickCoords.length - 1]) < 0.01) {
-          return
-        }
       }
       if (!(this._historyPointer === null)) {
         this._clickCoords = this._clickCoords.slice(0, this._historyPointer)
@@ -211,6 +207,9 @@ class PlotDraw extends maptalks.MapTool {
         registerMode['update'](this._clickCoords, this._geometry, event)
       }
       this._fireEvent('drawvertex', event)
+    }
+    if (this.getMode() === 'point') {
+      this.endDraw(event)
     }
   }
 
