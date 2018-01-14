@@ -37,6 +37,10 @@
   var drawTool = new MaptalksPlot.PlotDraw({
     mode: 'Curve'
   }).addTo(map).disable();
+  var editor = new MaptalksPlot.PlotEditor();
+  editor.on('editStart', function (event) {
+    console.log(event);
+  });
   drawTool.on('drawend', function (param) {
     console.log(param.geometry);
     if (param.geometry.getPlotType() === 'PlotPoint') {
@@ -50,6 +54,7 @@
       })
     }
     layer.addGeometry(param.geometry);
+    editor.activate(param.geometry);
   });
   var itemsLeft = ['Point', 'Polyline', 'Curve',
     'Arc', 'FreeLine',
