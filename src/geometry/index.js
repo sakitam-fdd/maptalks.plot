@@ -32,6 +32,8 @@ import FreePolygon from './Polygon/FreePolygon'
 import RectAngle from './Polygon/RectAngle'
 import GatheringPlace from './Polygon/GatheringPlace'
 
+// import TextArea from './Text/PlotTextBox'
+
 import * as PlotTypes from '../core/PlotTypes'
 const Coordinate = maptalks.Coordinate
 const RegisterModes = {}
@@ -387,5 +389,19 @@ RegisterModes[PlotTypes.ELLIPSE] = {
     return geometry
   }
 }
+// RegisterModes[PlotTypes.TEXTAREA] = {
+//   'freehand': false,
+//   'limitClickCount': 2,
+//   'action': ['click', 'mousemove', 'click'],
+//   'create': function (path) {
+//     return new RectAngle(path)
+//   },
+//   'update': function (path, geometry) {
+//     geometry.setPoints(path)
+//   },
+//   'generate': function (geometry) {
+//     return new TextArea()
+//   }
+// }
 
 export default RegisterModes

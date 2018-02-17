@@ -8,8 +8,7 @@ export const ZERO_TOLERANCE = 0.0001
 export const TWO_PI = Math.PI * 2
 export const BASE_LAYERNAME = 'maptalks-plot-vector-layer' // 矢量图层名，（唯一标识）
 export const BASE_HELP_CONTROL_POINT_ID = 'plot-helper-control-point-div' // 控制点要素的基类id
-export const BASE_HELP_HIDDEN = 'plot-helper-hidden-div' // 父类隐藏容器
-export const INTERNAL_LAYER_PREFIX = '_maptalks__internal_layer_'
+export const EDITOR_LAYERNAME = 'maptalks-plot-editor-vector-layer'
 export const DEF_TEXT_STYEL = { // 默认文本框样式
   backgroundColor: '#fff',
   borderRadius: '2px',

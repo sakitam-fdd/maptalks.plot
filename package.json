@@ -31,7 +31,8 @@
     "karma.tdd": "karma start build/karma.tdd.config.js"
   },
   "dependencies": {
-    "maptalks": "^0.37.0-alpha.1"
+    "autosize": "^4.0.0",
+    "maptalks": "^0.38.2"
   },
   "devDependencies": {
     "babel-core": "^6.26.0",
@@ -68,17 +69,17 @@
     "karma-safari-launcher": "^1.0.0",
     "karma-sinon": "^1.0.5",
     "mocha": "^3.5.0",
-    "rollup": "^0.50.0",
-    "rollup-plugin-babel": "^3.0.2",
-    "rollup-plugin-buble": "^0.16.0",
-    "rollup-plugin-commonjs": "^8.2.6",
+    "rollup": "^0.56.1",
+    "rollup-plugin-babel": "^3.0.3",
+    "rollup-plugin-buble": "^0.19.2",
+    "rollup-plugin-commonjs": "^8.3.0",
     "rollup-plugin-eslint": "^4.0.0",
     "rollup-plugin-local-resolve": "^1.0.7",
-    "rollup-plugin-node-resolve": "^3.0.0",
+    "rollup-plugin-node-resolve": "^3.0.3",
     "rollup-plugin-replace": "^2.0.0",
     "rollup-watch": "^4.3.1",
     "sinon": "^3.2.1",
-    "uglify-js": "^3.1.2"
+    "uglify-js": "^3.3.11"
   },
   "engines": {
     "node": ">= 4.0.0",

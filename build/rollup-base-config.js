@@ -7,11 +7,15 @@ const nodeResolve = require('rollup-plugin-node-resolve');
 const replace = require('rollup-plugin-replace');
 const eslint = require('rollup-plugin-eslint');
 const friendlyFormatter = require("eslint-friendly-formatter");
-const _package = require('../package.json')
-const eslintConfig = require('../.eslintrc')
-const year = new Date().getFullYear();
-const banner = `/*!\n * ${_package.name} v${_package.version}\n * LICENSE : ${_package.license}\n * (c) 2017-${year} ${_package.homepage}\n */`;
-
+const _package = require('../package.json');
+const eslintConfig = require('../.eslintrc');
+const time = new Date();
+const year = time.getFullYear();
+const banner = `/*!\n * author: ${_package.author} 
+ * ${_package.name} v${_package.version}
+ * build-time: ${year}-${time.getMonth()}-${time.getDay()} ${time.getHours()}:${time.getMinutes()}
+ * LICENSE: ${_package.license}
+ * (c) 2017-${year} ${_package.homepage}\n */`;
 const resolve = _path => path.resolve(__dirname, '../', _path)
 
 const genConfig = (opts) => {
@@ -19,7 +23,13 @@ const genConfig = (opts) => {
     input: {
       input: resolve('src/index.js'),
       plugins: [
-        eslint((eslintConfig => eslintConfig.formatter = friendlyFormatter)(eslintConfig)),
+        eslint(Object.assign({}, eslintConfig, {
+          formatter: friendlyFormatter,
+          exclude: [
+            resolve('package.json'),
+            resolve('node_modules/**')
+          ]
+        })),
         babel({
           exclude: 'node_modules/**' // only transpile our source code
         }),

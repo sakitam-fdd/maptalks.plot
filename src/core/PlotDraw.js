@@ -6,7 +6,7 @@
 import * as maptalks from 'maptalks'
 import {BASE_LAYERNAME} from '../Constants'
 import RegisterModes from '../geometry'
-import {merge} from '../utils/utils'
+import {merge, stopPropagation} from '../utils'
 
 const _options = {
   'symbol': {
@@ -22,14 +22,6 @@ const _options = {
   'ignoreMouseleave': true
 }
 const registeredMode = {}
-const stopPropagation = function (e) {
-  if (e.stopPropagation) {
-    e.stopPropagation()
-  } else {
-    e.cancelBubble = true
-  }
-  return this
-}
 
 class PlotDraw extends maptalks.MapTool {
   constructor (options = {}) {
@@ -336,8 +328,8 @@ class PlotDraw extends maptalks.MapTool {
 
   /**
    * Set draw tool's symbol
-   * @param {Object} symbol - symbol set
-   * @returns {DrawTool} this
+   * @param symbol
+   * @returns {PlotDraw}
    */
   setSymbol (symbol) {
     if (!symbol) {

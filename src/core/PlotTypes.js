@@ -1,4 +1,4 @@
-const TextArea = 'TextArea' // 文本标绘（特殊）
+const TEXTAREA = 'TextArea' // 文本标绘（特殊）
 const ARC = 'Arc'
 const CURVE = 'Curve'
 const GATHERING_PLACE = 'GatheringPlace'
@@ -26,7 +26,7 @@ const RECTFLAG = 'RectFlag'
 const TRIANGLEFLAG = 'TriangleFlag'
 const CURVEFLAG = 'CurveFlag'
 export {
-  TextArea,
+  TEXTAREA,
   ARC,
   CURVE,
   GATHERING_PLACE,
