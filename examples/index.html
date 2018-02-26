@@ -22,8 +22,6 @@
 <!--<script src="https://cdn.jsdelivr.net/npm/maptalks/dist/maptalks.js"></script>-->
 <script src="../dist/maptalks.plot.js"></script>
 <script type="text/javascript">
-  var id = MaptalksPlot.utils.uuid();
-  MaptalksPlot.utils.addClass(document.getElementById('map'), id);
   var map = new maptalks.Map('map', {
     center: [108.93, 34.27],
     zoom: 5,
@@ -56,7 +54,6 @@
       })
     }
     layer.addGeometry(param.geometry);
-    editor.activate(param.geometry);
   });
   var itemsLeft = ['Point', 'Polyline', 'Curve',
     'Arc', 'FreeLine',
@@ -157,6 +154,22 @@
       }
     ]
   }).addTo(map);
+
+  map.on('click', function (event) {
+    if (!drawTool.isActive()) {
+      map.identify({
+        coordinate: event.coordinate,
+        layers: [layer]
+      }, function (geom) {
+        if (geom.length > 0) {
+          editor.activate(geom[0]);
+        }
+      })
+    }
+  });
+  layer.on('clear', function () {
+    editor.deactivate()
+  })
 </script>
 </body>
 </html>

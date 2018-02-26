@@ -47,7 +47,6 @@ class PlotEditor extends EventAble(Class) {
   activate (plot) {
     this.deactivate()
     this._geometry = plot
-    console.log(plot, this)
     this.initControlPoints()
     this.fire('editStart', {
       geometry: this._geometry
@@ -140,11 +139,40 @@ class PlotEditor extends EventAble(Class) {
     this.controlPoints.push(_marker)
   }
 
+  /**
+   * handle drag start
+   * @param event
+   * @private
+   */
   _handleDragStart (event) {
     this.isDragging = true
   }
 
+  /**
+   * handle dragging
+   * @param event
+   * @private
+   */
   _handleDragging (event) {
+    this._handleGeometryChange(event)
+  }
+
+  /**
+   * handle drag end
+   * @param event
+   * @private
+   */
+  _handleDragEnd (event) {
+    this._handleGeometryChange(event)
+    this.isDragging = false
+  }
+
+  /**
+   * handle geometry change
+   * @param event
+   * @private
+   */
+  _handleGeometryChange (event) {
     if (this.isDragging && event.target) {
       const _index = event.target.getProperties() && event.target.getProperties()['index']
       const sourcePoints = this._geometry.getPoints()
@@ -153,10 +181,6 @@ class PlotEditor extends EventAble(Class) {
         this._geometry.setPoints(sourcePoints)
       }
     }
-  }
-
-  _handleDragEnd (event) {
-    this.isDragging = false
   }
 
   /**
@@ -302,23 +326,6 @@ class PlotEditor extends EventAble(Class) {
       points = plot.getPoints()
     }
     return points
-  }
-
-  /**
-   * 根据控制点个数生成控制点
-   * @param points
-   * @param limit
-   * @returns {Array}
-   */
-  static getLimitControlPoints (points, limit) {
-    const _coordinates = []
-    if (points && points.length > 0) {
-      const _n = Math.floor(points.length / limit) || 1
-      for (let i = 0; i < limit; i++) {
-        _coordinates.push(points[(i + 1) * _n - 1])
-      }
-    }
-    return _coordinates
   }
 }
 

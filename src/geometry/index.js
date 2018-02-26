@@ -357,9 +357,7 @@ RegisterModes[PlotTypes.CIRCLE] = {
     return new PlotCircle(coordinate[0], 0)
   },
   'update': function (path, geometry) {
-    const map = geometry.getMap()
-    const radius = map.computeLength(geometry.getCenter(), path[path.length - 1])
-    geometry.setRadius(radius)
+    geometry.setPoints(path)
   },
   'generate': function (geometry) {
     return geometry

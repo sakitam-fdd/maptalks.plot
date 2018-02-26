@@ -43,6 +43,13 @@ class PlotDraw extends maptalks.MapTool {
     this.drawLayer = null
 
     /**
+     * 是否处于激活状态
+     * @type {boolean}
+     * @private
+     */
+    this._isActive = false
+
+    /**
      * events
      * @type {{click: PlotDraw._firstClickHandler, mousemove: PlotDraw._mouseMoveHandler, dblclick: PlotDraw._doubleClickHandler}}
      */
@@ -84,6 +91,7 @@ class PlotDraw extends maptalks.MapTool {
       this._switchEvents('on')
       this._deactiveMapInteractions()
     }
+    this._isActive = true
     return this
   }
 
@@ -415,6 +423,7 @@ class PlotDraw extends maptalks.MapTool {
     if (this._map) {
       map.removeLayer(this._getDrawLayer(this.layerName))
     }
+    this._isActive = false
     return this
   }
 
@@ -438,6 +447,14 @@ class PlotDraw extends maptalks.MapTool {
     }
     delete this._ending
     return this
+  }
+
+  /**
+   * check isActive
+   * @returns {boolean}
+   */
+  isActive () {
+    return this._isActive
   }
 
   /**
